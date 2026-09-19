@@ -17,8 +17,9 @@ class Kiosztas(models.Model):
 
     diak = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="kiosztasok")
     feladat = models.ForeignKey("bank.BankFeladat", on_delete=models.PROTECT, related_name="kiosztasok")
-    ora = models.ForeignKey("courses.Ora", null=True, blank=True, on_delete=models.CASCADE,
-                            related_name="kiosztasok")
+    ora = models.ForeignKey(
+        "courses.Ora", null=True, blank=True, on_delete=models.CASCADE, related_name="kiosztasok"
+    )
     mod = models.CharField("mód", max_length=16, choices=Mod.choices, default=Mod.ORAI)
     letrehozva = models.DateTimeField(auto_now_add=True)
 
@@ -26,8 +27,9 @@ class Kiosztas(models.Model):
         verbose_name = "kiosztás"
         verbose_name_plural = "kiosztások"
         constraints = [
-            models.UniqueConstraint(fields=["diak", "ora"], condition=models.Q(mod="orai"),
-                                    name="egy_orai_feladat_diakonkent"),
+            models.UniqueConstraint(
+                fields=["diak", "ora"], condition=models.Q(mod="orai"), name="egy_orai_feladat_diakonkent"
+            ),
         ]
 
     def __str__(self):
@@ -74,6 +76,9 @@ class OcrKiserlet(models.Model):
         verbose_name = "felismerési kísérlet"
         verbose_name_plural = "felismerési kísérletek"
 
+    def __str__(self):
+        return f"{self.beadas.azonosito} – {self.letrehozva:%Y.%m.%d. %H:%M}"
+
 
 class Ertekeles(models.Model):
     beadas = models.ForeignKey(Beadas, on_delete=models.CASCADE, related_name="ertekelesek")
@@ -88,8 +93,13 @@ class Ertekeles(models.Model):
 
     tanari_pont = models.DecimalField("tanári pont", max_digits=3, decimal_places=2, null=True, blank=True)
     tanari_indok = models.TextField("a felülbírálás indoka", blank=True)
-    tanari_pont_ki = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                                       on_delete=models.SET_NULL, related_name="felulbiralasok")
+    tanari_pont_ki = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="felulbiralasok",
+    )
     tanari_pont_mikor = models.DateTimeField(null=True, blank=True)
 
     moodle_atvezetve = models.DateTimeField(null=True, blank=True)
@@ -99,6 +109,9 @@ class Ertekeles(models.Model):
     class Meta:
         verbose_name = "értékelés"
         verbose_name_plural = "értékelések"
+
+    def __str__(self):
+        return f"{self.beadas} – {self.vegleges_pont} pont"
 
     @property
     def vegleges_pont(self):

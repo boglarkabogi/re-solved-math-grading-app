@@ -3,9 +3,11 @@
 Példa:
     python -m motor.cli.ertekel --feladat "lnko(213, 200)" --helyes "1" --megoldas-fajl proba.txt
 """
+
 import argparse
 import json
 import sys
+from pathlib import Path
 
 from motor.grading import ertekel
 
@@ -21,14 +23,13 @@ def main(argv=None):
     args = p.parse_args(argv)
 
     if args.megoldas_fajl:
-        megoldas = open(args.megoldas_fajl, encoding="utf-8").read()
+        megoldas = Path(args.megoldas_fajl).read_text(encoding="utf-8")
     elif args.megoldas:
         megoldas = args.megoldas
     else:
         megoldas = sys.stdin.read()
 
-    eredmeny = ertekel(args.feladat, args.helyes, megoldas,
-                       temakor=args.temakor, modell=args.modell)
+    eredmeny = ertekel(args.feladat, args.helyes, megoldas, temakor=args.temakor, modell=args.modell)
     print(json.dumps(eredmeny, ensure_ascii=False, indent=2))
 
 

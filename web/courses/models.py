@@ -4,7 +4,7 @@ from django.db import models
 
 class Kurzus(models.Model):
     nev = models.CharField("név", max_length=120)
-    felev = models.CharField("félév", max_length=20)                 # pl. 2026/27/1
+    felev = models.CharField("félév", max_length=20)  # pl. 2026/27/1
     moodle_kurzus_id = models.CharField("Moodle kurzus-azonosító", max_length=64, blank=True)
 
     class Meta:
@@ -30,7 +30,9 @@ class Csoport(models.Model):
 
 
 class Tagsag(models.Model):
-    felhasznalo = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tagsagok")
+    felhasznalo = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tagsagok"
+    )
     csoport = models.ForeignKey(Csoport, on_delete=models.CASCADE, related_name="tagsagok")
     oktato = models.BooleanField("oktató a csoportban", default=False)
     csatlakozott = models.DateTimeField(auto_now_add=True)
@@ -39,6 +41,9 @@ class Tagsag(models.Model):
         unique_together = [("felhasznalo", "csoport")]
         verbose_name = "csoporttagság"
         verbose_name_plural = "csoporttagságok"
+
+    def __str__(self):
+        return f"{self.felhasznalo} – {self.csoport}"
 
 
 class Ora(models.Model):
@@ -78,3 +83,6 @@ class GyakorlasEngedely(models.Model):
         unique_together = [("csoport", "temakor")]
         verbose_name = "gyakorlási engedély"
         verbose_name_plural = "gyakorlási engedélyek"
+
+    def __str__(self):
+        return f"{self.csoport} – {self.temakor}"

@@ -1,4 +1,5 @@
 """Beállítások környezeti változókból (a .env fájlból)."""
+
 import os
 
 

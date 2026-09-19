@@ -3,7 +3,7 @@ from django.db import models
 
 
 class Temakor(models.Model):
-    kod = models.SlugField("kód", unique=True)                       # lnko, kongruencia, polinom_lnko
+    kod = models.SlugField("kód", unique=True)  # lnko, kongruencia, polinom_lnko
     nev = models.CharField("név", max_length=120)
     prompt_kiegeszites = models.TextField("témakör-specifikus prompt", blank=True)
 
@@ -27,12 +27,17 @@ class BankFeladat(models.Model):
     kod = models.CharField("kód", max_length=64, unique=True)
     feladat_szoveg = models.TextField("feladat szövege (Markdown + LaTeX)")
     helyes_megoldas = models.TextField("helyes megoldás")
-    nehezseg = models.PositiveSmallIntegerField("nehézség", default=2)   # 1-3
+    nehezseg = models.PositiveSmallIntegerField("nehézség", default=2)  # 1-3
     hasznalat = models.CharField(max_length=16, choices=Hasznalat.choices, default=Hasznalat.MINDKETTO)
     aktiv = models.BooleanField("aktív", default=True)
     megjegyzes = models.TextField("tanári megjegyzés", blank=True)
-    letrehozta = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True,
-                                   on_delete=models.SET_NULL, related_name="felvitt_feladatok")
+    letrehozta = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="felvitt_feladatok",
+    )
     letrehozva = models.DateTimeField(auto_now_add=True)
 
     class Meta:

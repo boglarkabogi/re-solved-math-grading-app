@@ -2,6 +2,7 @@
 
 Indítás:  python web/manage.py run_worker
 """
+
 import time
 
 from django.core.management.base import BaseCommand
@@ -19,10 +20,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         self.stdout.write("A feldolgozó elindult. Kilépés: Ctrl+C")
         while True:
-            beadas = (Beadas.objects
-                      .filter(allapot__in=[Beadas.Allapot.KEP_FELTOLTVE, Beadas.Allapot.ERTEKELES_FUT])
-                      .order_by("letrehozva")
-                      .first())
+            beadas = (
+                Beadas.objects.filter(
+                    allapot__in=[Beadas.Allapot.KEP_FELTOLTVE, Beadas.Allapot.ERTEKELES_FUT]
+                )
+                .order_by("letrehozva")
+                .first()
+            )
             if beadas is None:
                 time.sleep(options["interval"])
                 continue

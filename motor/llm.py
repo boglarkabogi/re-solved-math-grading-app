@@ -1,6 +1,7 @@
 """OpenAI-kompatibilis kliens sebességkorláttal és újrapróbálkozással."""
-import time
+
 import threading
+import time
 
 from .config import beallitasok
 
@@ -38,11 +39,9 @@ def chat(uzenetek, modell=None, probalkozas=3, **kwargs):
     for i in range(probalkozas):
         _throttle.var()
         try:
-            valasz = _kliens().chat.completions.create(
-                model=modell, messages=uzenetek, **kwargs
-            )
+            valasz = _kliens().chat.completions.create(model=modell, messages=uzenetek, **kwargs)
             return valasz.choices[0].message.content
         except Exception as hiba:  # 429, időtúllépés, hálózati hiba
             utolso_hiba = hiba
-            time.sleep(2 ** i * 5)
+            time.sleep(2**i * 5)
     raise RuntimeError(f"A modellhívás {probalkozas} próbálkozás után sem sikerült") from utolso_hiba

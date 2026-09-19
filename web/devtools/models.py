@@ -24,6 +24,9 @@ class ProbaFuttatas(models.Model):
         verbose_name_plural = "próbafuttatások"
         ordering = ["-letrehozva"]
 
+    def __str__(self):
+        return f"{self.letrehozva:%Y.%m.%d. %H:%M} – {self.modell} – {self.pont}"
+
 
 class Teszteset(models.Model):
     """A regressziós készlet egy eleme: mire mennyi pont járna."""
@@ -40,6 +43,9 @@ class Teszteset(models.Model):
         verbose_name = "teszteset"
         verbose_name_plural = "tesztesetek"
 
+    def __str__(self):
+        return f"{self.cimke or 'teszteset'} (elvárt: {self.elvart_pont})"
+
 
 class RegressziosFutas(models.Model):
     """A teljes tesztkészlet végigfuttatása egy modellel."""
@@ -55,3 +61,6 @@ class RegressziosFutas(models.Model):
         verbose_name = "regressziós futás"
         verbose_name_plural = "regressziós futások"
         ordering = ["-letrehozva"]
+
+    def __str__(self):
+        return f"{self.letrehozva:%Y.%m.%d. %H:%M} – {self.modell} ({self.egyezes}/{self.esetek_szama})"

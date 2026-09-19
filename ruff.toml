@@ -1,0 +1,30 @@
+# A linter beállításai. A Django által generált fájlokat nem nézzük át,
+# és kikapcsoljuk azokat a szabályokat, amelyek Django-projektben hamis riasztást adnak.
+
+line-length = 110
+target-version = "py312"
+extend-exclude = ["**/migrations/*", ".venv", "staticfiles", "media"]
+
+[lint]
+select = [
+    "E",    # pycodestyle hibák
+    "W",    # pycodestyle figyelmeztetések
+    "F",    # pyflakes: nem használt import, elgépelt név
+    "I",    # import-sorrend
+    "UP",   # elavult Python-szerkezetek
+    "B",    # gyakori hibaforrások (bugbear)
+    "SIM",  # egyszerűsíthető kódrészletek
+    "C4",   # comprehension-ök
+    "DJ",   # Django-specifikus szabályok
+]
+ignore = [
+    "E501",  # hosszú sorok — a formázó kezeli
+]
+
+[lint.per-file-ignores]
+"web/manage.py" = ["EXE001"]        # a shebang szándékos, a fájlt nem futtatjuk közvetlenül
+"motor/llm.py" = ["BLE001"]         # a modellhívásnál minden hibát el kell kapni az újrapróbához
+"tests/*" = ["S101"]                # a tesztekben az assert rendben van
+
+[format]
+quote-style = "double"

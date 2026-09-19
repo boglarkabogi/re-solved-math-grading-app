@@ -32,7 +32,7 @@ class KulsoAzonosito(models.Model):
     """Külső rendszerbeli azonosító (Moodle, ELTE-belépés) a felhasználóhoz kötve."""
 
     felhasznalo = models.ForeignKey(Felhasznalo, on_delete=models.CASCADE, related_name="kulso_azonositok")
-    forras = models.CharField("forrás", max_length=32)          # pl. "moodle-lti"
+    forras = models.CharField("forrás", max_length=32)  # pl. "moodle-lti"
     issuer = models.CharField("kibocsátó", max_length=255, blank=True)
     kulso_id = models.CharField("külső azonosító", max_length=255)
 

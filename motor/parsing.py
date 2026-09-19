@@ -1,4 +1,5 @@
 """A modell válaszának feldolgozása."""
+
 import json
 import re
 
@@ -7,7 +8,7 @@ PONTOK = [0.0, 0.25, 0.5, 0.75, 1.0]
 
 def strip_think_blocks(szoveg):
     """A gondolkodó modellek <think>...</think> blokkjainak eltávolítása."""
-    return re.sub(r"<think>.*?</think>", "", szoveg or "", flags=re.S).strip()
+    return re.sub(r"<think>.*?</think>", "", szoveg or "", flags=re.DOTALL).strip()
 
 
 def extract_json(szoveg):
@@ -36,7 +37,7 @@ def extract_json(szoveg):
         elif karakter == "}":
             melyseg -= 1
             if melyseg == 0:
-                return json.loads(szoveg[kezdet:i + 1])
+                return json.loads(szoveg[kezdet : i + 1])
     raise ValueError("A JSON-objektum nem záródik le")
 
 
