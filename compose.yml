@@ -1,0 +1,46 @@
+# Fejlesztői környezet: docker compose up
+# Mindkettőtöknél ugyanez fut, a kód élőben csatolva (mentés után azonnal újratölt).
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-dimat}
+      POSTGRES_USER: ${POSTGRES_USER:-dimat}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dimat}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-dimat}"]
+      interval: 5s
+      retries: 10
+    ports:
+      - "5432:5432"          # csak hogy DBeaver/pgAdmin rá tudjon csatlakozni
+
+  web:
+    build: .
+    command: python web/manage.py runserver 0.0.0.0:8000
+    env_file: .env
+    volumes:
+      - .:/app               # a kód élőben csatolva -> nem kell újraépíteni minden mentésnél
+      - media:/app/media     # a feltöltött képek NEM a gitben, hanem itt élnek
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  worker:
+    build: .
+    command: python web/manage.py run_worker      # a sor feldolgozója (OCR + pontozás)
+    env_file: .env
+    volumes:
+      - .:/app
+      - media:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
+  media:

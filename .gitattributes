@@ -1,0 +1,5 @@
+# Windows <-> Linux sorvég-káosz megelőzése (a konténer Linux!)
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.pdf binary

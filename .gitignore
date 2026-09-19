@@ -1,0 +1,26 @@
+# Titkok
+.env
+*.pem
+*.key
+
+# Diákadat és feltöltött képek — ezek soha nem mennek a gitbe
+media/
+beadasok/
+*.sqlite3
+*.dump
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Szerkesztők, oprendszer
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

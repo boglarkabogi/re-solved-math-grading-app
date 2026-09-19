@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="hu">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block cim %}Dimat{% endblock %}</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+  <script src="https://unpkg.com/htmx.org@2.0.4"></script>
+</head>
+<body>
+<main class="container">
+  <nav>
+    <ul><li><strong>Dimat feladatértékelő</strong></li></ul>
+    <ul>
+      {% if user.is_authenticated %}
+        <li>{{ user.email }}</li>
+        <li><a href="{% url 'logout' %}">kilépés</a></li>
+      {% else %}
+        <li><a href="{% url 'login' %}">belépés</a></li>
+      {% endif %}
+    </ul>
+  </nav>
+  {% block tartalom %}{% endblock %}
+</main>
+</body>
+</html>

@@ -1,0 +1,52 @@
+# Minden push és pull request után lefut: linter + tesztek.
+# Így a main ág mindig működőképes marad, és a másikatok kódját nem kell kézzel próbálgatni.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      db:
+        image: postgres:16
+        env:
+          POSTGRES_DB: dimat
+          POSTGRES_USER: dimat
+          POSTGRES_PASSWORD: dimat
+        options: >-
+          --health-cmd "pg_isready -U dimat"
+          --health-interval 5s --health-retries 10
+        ports: ["5432:5432"]
+
+    env:
+      DATABASE_URL: postgres://dimat:dimat@localhost:5432/dimat
+      DJANGO_SECRET_KEY: teszt-kulcs-nem-titkos
+      DJANGO_DEBUG: "0"
+      # LLM-hívás a CI-ban nincs: a teszteket mockolt klienssel futtatjuk
+      LLM_BASE_URL: http://localhost/nincs
+      LLM_API_KEY: teszt
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - run: pip install -r requirements.txt -r requirements-dev.txt
+
+      - name: Linter
+        run: ruff check . && ruff format --check .
+
+      - name: Migrációk ellenőrzése (nincs-e elfelejtett makemigrations)
+        run: python web/manage.py makemigrations --check --dry-run
+
+      - name: Tesztek
+        run: pytest

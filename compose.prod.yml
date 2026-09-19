@@ -1,0 +1,37 @@
+# Éles (kari szerver): docker compose -f compose.yml -f compose.prod.yml up -d --build
+# Csak a fejlesztői beállításoktól eltérő részeket írja felül.
+
+services:
+  db:
+    ports: []                                  # az adatbázis kifelé ne látsszon
+    volumes:
+      - /srv/dimat/pgdata:/var/lib/postgresql/data   # a szerver lemezén, hogy menthető legyen
+
+  web:
+    command: gunicorn config.wsgi:application --chdir web --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    volumes:
+      - /srv/dimat/media:/app/media            # a beadott képek a szerver lemezén
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8000:8000"                  # csak a reverse proxy éri el
+
+  worker:
+    volumes:
+      - /srv/dimat/media:/app/media
+    restart: unless-stopped
+
+  # HTTPS. Ha a karon már van reverse proxy, ezt hagyjátok ki.
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./docker/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddydata:/data
+    depends_on:
+      - web
+
+volumes:
+  caddydata:

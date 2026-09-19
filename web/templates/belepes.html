@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block tartalom %}
+  <h1>Belépés</h1>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Belépés</button>
+  </form>
+{% endblock %}

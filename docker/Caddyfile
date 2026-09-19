@@ -1,0 +1,8 @@
+# Cseréld a valódi névre (pl. dimat.inf.elte.hu). A Caddy magától kér HTTPS-tanúsítványt.
+dimat.pelda.elte.hu {
+	encode gzip
+	request_body {
+		max_size 20MB          # a feltöltött fotók miatt
+	}
+	reverse_proxy web:8000
+}
