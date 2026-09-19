@@ -1,6 +1,3 @@
-# A linter beállításai. A Django által generált fájlokat nem nézzük át,
-# és kikapcsoljuk azokat a szabályokat, amelyek Django-projektben hamis riasztást adnak.
-
 line-length = 110
 target-version = "py312"
 extend-exclude = ["**/migrations/*", ".venv", "staticfiles", "media"]
@@ -28,3 +25,6 @@ ignore = [
 
 [format]
 quote-style = "double"
+
+[lint.isort]
+known-first-party = ["motor", "config", "accounts", "bank", "courses", "submissions", "devtools"]

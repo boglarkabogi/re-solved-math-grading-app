@@ -1,5 +1,4 @@
-# Minden push és pull request után lefut: linter + tesztek.
-# Így a main ág mindig működőképes marad, és a másikatok kódját nem kell kézzel próbálgatni.
+# Minden push és pull request után lefut: linter, migrációellenőrzés, tesztek.
 
 name: CI
 
@@ -33,20 +32,35 @@ jobs:
       LLM_API_KEY: teszt
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.12"
           cache: pip
 
       - run: pip install -r requirements.txt -r requirements-dev.txt
 
-      - name: Linter
-        run: ruff check . && ruff format --check .
+      - name: Verziók kiírása (hibakereséshez)
+        run: |
+          python --version
+          ruff --version
+          echo "--- a repó gyökere ---"
+          ls -la
+          echo "--- ruff.toml jelen van? ---"
+          test -f ruff.toml && cat ruff.toml || echo "NINCS ruff.toml a gyökérben!"
+
+      - name: Linter (ruff check)
+        run: ruff check --output-format=github .
+
+      - name: Formázás ellenőrzése (ruff format)
+        run: ruff format --check --diff .
+
+      - name: Django beállítások ellenőrzése
+        run: python web/manage.py check
 
       - name: Migrációk ellenőrzése (nincs-e elfelejtett makemigrations)
         run: python web/manage.py makemigrations --check --dry-run
 
       - name: Tesztek
-        run: pytest
+        run: python -m pytest -q
