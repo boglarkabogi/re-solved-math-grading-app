@@ -292,6 +292,11 @@ body {
 
     font-size: 10px;
     cursor: pointer;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
 }
 
 .generate-button:hover {

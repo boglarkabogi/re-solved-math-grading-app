@@ -1,0 +1,363 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cim %}Assignment | ReSolve{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/generated_assignment.css' %}">
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+>
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="generated-page">
+
+    <header class="generated-header">
+
+        <div class="generated-logo">RESOLVE</div>
+
+        <nav class="generated-desktop-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="/beadas/">Assignments</a>
+        </nav>
+
+        <div class="generated-header-actions">
+            <button class="generated-language-button">HU</button>
+
+            <button
+                class="generated-mobile-menu-button"
+                id="generated-mobile-menu-button"
+                type="button"
+                aria-label="Open menu"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+
+        <nav class="generated-mobile-nav" id="generated-mobile-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="/beadas/">Assignments</a>
+        </nav>
+
+    </header>
+
+
+    <main class="generated-main">
+
+        <section class="generated-topic">
+            <h1>Topic: Linear Congruence</h1>
+            <p>1. Lesson · Due to: 2026.09.20</p>
+        </section>
+
+
+        <section class="generated-progress">
+
+            <div class="generated-step completed">
+                <div class="generated-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+
+                <div class="generated-step-label">
+                    Generate Assignment
+                </div>
+            </div>
+
+            <div class="generated-progress-line completed-line"></div>
+
+            <div class="generated-step active">
+                <div class="generated-step-number">2</div>
+                <div class="generated-step-label">Upload Image</div>
+            </div>
+
+            <div class="generated-progress-line"></div>
+
+            <div class="generated-step">
+                <div class="generated-step-number">3</div>
+                <div class="generated-step-label">Recognise Text</div>
+            </div>
+
+            <div class="generated-progress-line"></div>
+
+            <div class="generated-step">
+                <div class="generated-step-number">4</div>
+                <div class="generated-step-label">Get Evaluation</div>
+            </div>
+
+        </section>
+
+
+        <section class="generated-work-area">
+
+            <section class="generated-assignment-card">
+
+                <div class="generated-card-heading">
+
+                    <div>
+                        <h2>Your assignments</h2>
+                        <p>You can only generate one assignment per topic.</p>
+                    </div>
+
+                    <span>Generated: 1/1</span>
+
+                </div>
+
+                <div class="generated-problem">
+
+                    <p class="generated-problem-title">
+                        Oldja meg az alábbi lineáris kongruenciákat:
+                    </p>
+
+                    <div
+                        class="math-expression"
+                        data-expression="19x \equiv 16 \pmod{470}"
+                    ></div>
+
+                    <div
+                        class="math-expression"
+                        data-expression="16x \equiv 5 \pmod{202}"
+                    ></div>
+
+                </div>
+
+            </section>
+
+
+            <section class="generated-upload-card">
+
+                <h2>Upload your solution</h2>
+
+                <p class="generated-upload-description">
+                    Submit an image of your handwritten solution.
+                </p>
+
+                <label class="generated-drop-zone" for="solution-image">
+
+                    <input
+                        type="file"
+                        id="solution-image"
+                        accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                        hidden
+                    >
+
+                    <div id="upload-placeholder">
+                        <div class="generated-file-icon">📄</div>
+
+                        <strong>Drag & drop your image here</strong>
+
+                        <span>or tap to browse files</span>
+                    </div>
+
+
+                    <div class="preview-wrapper" id="preview-wrapper">
+
+                        <img
+                            id="solution-preview"
+                            class="solution-preview"
+                            alt="Selected solution"
+                        >
+
+                        <button
+                            type="button"
+                            class="zoom-button"
+                            id="zoom-button"
+                            aria-label="View image"
+                        >
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                <circle
+                                    cx="11"
+                                    cy="11"
+                                    r="6"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                />
+
+                                <path
+                                    d="M16 16L21 21"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="1.6"
+                                    stroke-linecap="round"
+                                />
+
+                            </svg>
+                        </button>
+
+                    </div>
+
+                </label>
+
+                <p class="generated-file-info">
+                    JPG, JPEG or PNG. Maximum 20 MB.
+                </p>
+
+            </section>
+
+        </section>
+
+
+        <section class="generated-tip">
+
+            <div class="generated-tip-content">
+
+                <div class="generated-tip-icon">💡</div>
+
+                <div>
+                    <h3>Tip</h3>
+
+                    <p>
+                        You will see the recognized text only after you upload
+                        an image and start the recognition. You can run the
+                        recognition up to three times per image to help keep
+                        the system running smoothly.
+                    </p>
+                </div>
+
+            </div>
+
+            <button class="recognise-button" type="button">
+                Recognise Text →
+            </button>
+
+        </section>
+
+    </main>
+
+
+    <footer class="generated-footer">
+        <span>ReSolved © 2026</span>
+        <span>Adaptive AI Learning Platform</span>
+    </footer>
+
+</div>
+
+
+<div class="image-modal" id="image-modal">
+
+    <button
+        type="button"
+        class="image-modal-close"
+        id="image-modal-close"
+        aria-label="Close image"
+    >
+        ×
+    </button>
+
+    <img
+        id="modal-image"
+        class="modal-image"
+        alt="Full size solution"
+    >
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+<script>
+    // KaTeX
+    document.querySelectorAll(".math-expression").forEach((element) => {
+        katex.render(
+            element.dataset.expression,
+            element,
+            {
+                throwOnError: false,
+                displayMode: true
+            }
+        );
+    });
+
+
+    // Mobile menu
+    const menuButton = document.getElementById(
+        "generated-mobile-menu-button"
+    );
+
+    const mobileNav = document.getElementById(
+        "generated-mobile-nav"
+    );
+
+    menuButton.addEventListener("click", () => {
+        mobileNav.classList.toggle("open");
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            mobileNav.classList.contains("open")
+        );
+    });
+
+
+    // Image upload + preview
+    const fileInput = document.getElementById("solution-image");
+    const preview = document.getElementById("solution-preview");
+    const placeholder = document.getElementById("upload-placeholder");
+    const previewWrapper = document.getElementById("preview-wrapper");
+
+    const zoomButton = document.getElementById("zoom-button");
+    const imageModal = document.getElementById("image-modal");
+    const modalImage = document.getElementById("modal-image");
+    const modalClose = document.getElementById("image-modal-close");
+
+    fileInput.addEventListener("change", () => {
+        const file = fileInput.files[0];
+
+        if (!file) {
+            return;
+        }
+
+        const imageUrl = URL.createObjectURL(file);
+
+        preview.src = imageUrl;
+        modalImage.src = imageUrl;
+
+        placeholder.style.display = "none";
+        previewWrapper.style.display = "block";
+    });
+
+
+    // Open large image
+    zoomButton.addEventListener("click", (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+
+        imageModal.classList.add("open");
+    });
+
+
+    // Close with X
+    modalClose.addEventListener("click", () => {
+        imageModal.classList.remove("open");
+    });
+
+
+    // Close when clicking dark background
+    imageModal.addEventListener("click", (event) => {
+        if (event.target === imageModal) {
+            imageModal.classList.remove("open");
+        }
+    });
+
+
+    // Close with Escape
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Escape") {
+            imageModal.classList.remove("open");
+        }
+    });
+</script>
+
+{% endblock %}
