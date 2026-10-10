@@ -4,13 +4,17 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from .views import kezdolap
+from .views import home
 
 urlpatterns = [
-    path("", kezdolap, name="kezdolap"),
-    path("belepes/", auth_views.LoginView.as_view(template_name="belepes.html"), name="login"),
+    path("", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
+
+    path("home/", home, name="home"),
+
     path("kilepes/", auth_views.LogoutView.as_view(), name="logout"),
+
     path("admin/", admin.site.urls),
+
     path("beadas/", include("submissions.urls")),
 ]
 
