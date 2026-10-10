@@ -3,7 +3,33 @@
 
 {% block tartalom %}
   <h1>Értékelés próbája (OCR nélkül)</h1>
-  <p>Itt lesz a próbaűrlap: feladat, helyes megoldás, megoldásszöveg, modellválasztó.</p>
+  <p>
+    A megoldás szövege kézzel beírható, a rendszer egyenesen az értékelő modellt hívja.
+    Így a prompt kép nélkül hangolható, és a bemenet minden futásnál ugyanaz.</p>
+
+  {% if bank_tasks %}
+    <details>
+      <summary>Előtöltés a feladatbankból</summary>
+      <ul>
+        {% for task in bank_tasks %}
+          <li><a href="?task={{ task.pk }}">{{ task.code }} — {{ task.topic }}</a></li>
+        {% endfor %}
+      </ul>
+    </details>
+  {% endif %}
+
+    <form hx-post="{% url 'devtools:trial-run' %}"
+        hx-target="#result"
+        hx-swap="innerHTML"
+        hx-disabled-elt="find button"
+        hx-indicator="#waiting">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Értékelés futtatása</button>
+    <progress id="waiting" class="htmx-indicator"></progress>
+  </form>
+ 
+  <div id="result"></div>
 
   <h2>Legutóbbi próbafuttatások</h2>
   <table>

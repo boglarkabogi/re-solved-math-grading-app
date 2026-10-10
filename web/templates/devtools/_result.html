@@ -1,0 +1,69 @@
+{# One trial run's result. HTMX swaps this into #result. #}
+
+{% if form_errors %}
+  <article>
+    <h3>Az űrlap hibás</h3>
+    <ul>
+      {% for field, messages in form_errors.items %}<li>{{ field }}: {{ messages|join:", " }}</li>{% endfor %}
+    </ul>
+  </article>
+
+{% elif error %}
+  <article>
+    <h3>Nem sikerült az értékelés</h3>
+    <p>{{ error }}</p>
+    <p><small>
+      Gyakori okok: hiányzik vagy lejárt az <code>LLM_API_KEY</code>, nem létező modellnevet adtál
+      meg, vagy a modell nem JSON-t válaszolt. A nyers válasz lent megnézhető, és a futtatás
+      el is mentődött: <a href="/admin/devtools/trialrun/{{ run.pk }}/change/">megnyitás az adminban</a>.
+    </small></p>
+    <details>
+      <summary>A modell nyers válasza</summary>
+      <pre style="white-space: pre-wrap"><code>{{ run.raw_response|default:"(üres)" }}</code></pre>
+    </details>
+  </article>
+
+{% else %}
+  <article>
+    <header>
+      <strong>Pont: {{ result.pont }}</strong>
+      {% if expected_score is not None %}
+        {% if matches_expected %}
+          <ins>egyezik az elvárttal</ins>
+        {% else %}
+          <mark>elvárt: {{ expected_score }}</mark>
+        {% endif %}
+      {% endif %}
+      <small>
+        · magabiztosság: {{ result.magabiztossag|default:"–" }}
+        · {{ run.duration_ms }} ms
+        · {{ run.model_name }}
+      </small>
+    </header>
+
+    <p>{{ result.indoklas }}</p>
+
+    <ul>
+      <li>a diák végeredménye: <code>{{ result.diak_vegeredmenye|default:"–" }}</code></li>
+      <li>összefoglalva: {{ result.diak_megoldasa_osszefoglalva|default:"–" }}</li>
+      {% if result.ertelmezheto is False %}<li><mark>a modell szerint nem értelmezhető</mark></li>{% endif %}
+      {% if result.ocr_hiba_gyanu %}
+        <li><mark>felismerési hiba gyanúja: {{ result.ocr_hiba_indok|default:"–" }}</mark></li>
+      {% endif %}
+    </ul>
+
+    {% if benchmark_case %}
+      <p><small>Tesztesetként elmentve: <em>{{ benchmark_case.label }}</em></small></p>
+    {% endif %}
+
+    <details>
+      <summary>Az elküldött prompt</summary>
+      <pre style="white-space: pre-wrap"><code>{{ run.prompt }}</code></pre>
+    </details>
+
+    <details>
+      <summary>A modell nyers válasza</summary>
+      <pre style="white-space: pre-wrap"><code>{{ run.raw_response }}</code></pre>
+    </details>
+  </article>
+{% endif %}
