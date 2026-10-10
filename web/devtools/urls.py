@@ -5,5 +5,5 @@ from . import views
 app_name = "devtools"
 
 urlpatterns = [
-    path("", views.proba, name="proba"),
+    path("", views.trial_run, name="trial-run"),
 ]

@@ -16,7 +16,7 @@ class Kiosztas(models.Model):
         GYAKORLO = "gyakorlo", "gyakorló"
 
     diak = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="kiosztasok")
-    feladat = models.ForeignKey("bank.BankFeladat", on_delete=models.PROTECT, related_name="kiosztasok")
+    feladat = models.ForeignKey("bank.TaskBank", on_delete=models.PROTECT, related_name="kiosztasok")
     ora = models.ForeignKey(
         "courses.Ora", null=True, blank=True, on_delete=models.CASCADE, related_name="kiosztasok"
     )

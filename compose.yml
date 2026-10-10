@@ -5,6 +5,7 @@ services:
   db:
     image: postgres:16
     environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-dimat}:${POSTGRES_PASSWORD:-dimat}@db:5432/${POSTGRES_DB:-dimat}
       POSTGRES_DB: ${POSTGRES_DB:-dimat}
       POSTGRES_USER: ${POSTGRES_USER:-dimat}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-dimat}

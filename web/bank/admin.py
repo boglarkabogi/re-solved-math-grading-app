@@ -1,15 +1,16 @@
 from django.contrib import admin
 
-from .models import BankFeladat, Temakor
+from .models import TaskBank, Topic
 
 
-@admin.register(Temakor)
-class TemakorAdmin(admin.ModelAdmin):
-    list_display = ("nev", "kod")
+@admin.register(Topic)
+class TopicAdmin(admin.ModelAdmin):
+    list_display = ("name", "code")
+    search_fields = ("name", "code")
 
 
-@admin.register(BankFeladat)
-class BankFeladatAdmin(admin.ModelAdmin):
-    list_display = ("kod", "temakor", "nehezseg", "hasznalat", "aktiv")
-    list_filter = ("temakor", "hasznalat", "aktiv")
-    search_fields = ("kod", "feladat_szoveg", "helyes_megoldas")
+@admin.register(TaskBank)
+class TaskBankAdmin(admin.ModelAdmin):
+    list_display = ("code", "topic", "difficulty", "use", "active")
+    list_filter = ("topic", "use", "active")
+    search_fields = ("code", "task_text", "correct_solution")

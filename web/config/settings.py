@@ -1,13 +1,16 @@
 """Django-beállítások. Minden titok környezeti változóból jön."""
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # .../web
-PROJECT_DIR = BASE_DIR.parent  # a repó gyökere
+PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(PROJECT_DIR))
 
 load_dotenv(PROJECT_DIR / ".env")
 

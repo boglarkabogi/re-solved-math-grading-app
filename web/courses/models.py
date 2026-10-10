@@ -76,7 +76,7 @@ class Ora(models.Model):
 
 class GyakorlasEngedely(models.Model):
     csoport = models.ForeignKey(Csoport, on_delete=models.CASCADE, related_name="gyakorlas_engedelyek")
-    temakor = models.ForeignKey("bank.Temakor", on_delete=models.CASCADE)
+    temakor = models.ForeignKey("bank.Topic", on_delete=models.CASCADE)
     napi_limit = models.PositiveIntegerField("napi limit", default=20)
 
     class Meta:

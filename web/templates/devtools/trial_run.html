@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block cim %}Fejlesztői felület – értékelés{% endblock %}
+
+{% block tartalom %}
+  <h1>Értékelés próbája (OCR nélkül)</h1>
+  <p>Itt lesz a próbaűrlap: feladat, helyes megoldás, megoldásszöveg, modellválasztó.</p>
+
+  <h2>Legutóbbi próbafuttatások</h2>
+  <table>
+    <thead>
+      <tr><th>Mikor</th><th>Modell</th><th>Pont</th><th>Magabiztosság</th><th>Idő</th></tr>
+    </thead>
+    <tbody>
+      {% for run in recent_runs %}
+        <tr>
+          <td>{{ run.created_at|date:"m.d. H:i" }}</td>
+          <td><small>{{ run.model_name|default:"–" }}</small></td>
+          <td>{{ run.score|default:"–" }}</td>
+          <td>{{ run.confidence|default:"–" }}</td>
+          <td>{{ run.duration_ms|default:"–" }} ms</td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="5">Még nincs futtatás.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+{% endblock %}
