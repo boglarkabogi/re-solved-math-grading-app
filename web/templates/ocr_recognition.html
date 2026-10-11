@@ -272,9 +272,12 @@
 
             </div>
 
-            <button class="evaluation-button" type="button">
+            <a
+                href="{% url 'evaluation' %}?attempt={{ attempt }}"
+                class="evaluation-button"
+            >
                 Get your evaluation →
-            </button>
+            </a>
 
         </section>
 

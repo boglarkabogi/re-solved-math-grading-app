@@ -34,3 +34,16 @@ def ocr_recognition(request):
             "attempt": attempt,
         },
     )
+
+@login_required
+def evaluation(request):
+    attempt = int(request.GET.get("attempt", 1))
+    attempt = max(1, min(attempt, 3))
+
+    return render(
+        request,
+        "evaluation.html",
+        {
+            "attempt": attempt,
+        },
+    )
