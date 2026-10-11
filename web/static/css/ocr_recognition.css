@@ -1,0 +1,774 @@
+body {
+    background: #f4f4f4;
+    color: #101827;
+}
+
+.ocr-page {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+
+/* ========================================
+   HEADER
+   ======================================== */
+
+.ocr-header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+
+    padding: 0 56px;
+
+    background: #ffffff;
+    border-bottom: 1px solid #eeeeee;
+
+    z-index: 1000;
+}
+
+.ocr-logo {
+    font-family: "BBH Bartle", sans-serif;
+    font-size: 22px;
+    font-weight: 400;
+}
+
+.ocr-desktop-nav {
+    display: flex;
+    gap: 36px;
+
+    margin-left: auto;
+    margin-right: 36px;
+}
+
+.ocr-desktop-nav a {
+    color: #222222;
+    text-decoration: none;
+    font-size: 12px;
+}
+
+.ocr-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.ocr-language-button {
+    width: 28px;
+    height: 28px;
+
+    border: 0;
+
+    background: #111111;
+    color: #ffffff;
+
+    font-size: 10px;
+}
+
+.ocr-mobile-menu-button {
+    display: none;
+
+    padding: 0;
+
+    border: 0;
+    background: transparent;
+
+    font-size: 23px;
+
+    cursor: pointer;
+}
+
+.ocr-mobile-nav {
+    display: none;
+}
+
+
+/* ========================================
+   MAIN
+   ======================================== */
+
+.ocr-main {
+    width: 100%;
+    max-width: 1120px;
+
+    flex: 1;
+
+    margin: 0 auto;
+    padding: 100px 48px 32px;
+}
+
+
+/* ========================================
+   TOPIC
+   ======================================== */
+
+.ocr-topic {
+    margin-bottom: 14px;
+}
+
+.ocr-topic h1 {
+    margin: 0 0 4px;
+
+    font-size: 22px;
+}
+
+.ocr-topic p {
+    margin: 0;
+
+    color: #666666;
+    font-size: 11px;
+}
+
+
+/* ========================================
+   PROGRESS
+   ======================================== */
+
+.ocr-progress {
+    min-height: 110px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 20px 48px;
+    margin-bottom: 16px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.ocr-step {
+    min-width: 110px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 8px;
+}
+
+.ocr-step-number {
+    width: 38px;
+    height: 38px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: 1px solid #e5e7eb;
+
+    background: #f3f4f6;
+    color: #a5abba;
+
+    font-size: 12px;
+}
+
+.ocr-step.active .ocr-step-number {
+    background: #101827;
+    color: #ffffff;
+    border-color: #101827;
+}
+
+.ocr-step.completed .ocr-step-number {
+    background: #ffffff;
+    color: #101827;
+    border-color: #101827;
+}
+
+.completed-check svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ocr-step-label {
+    color: #a5abba;
+
+    font-size: 9px;
+    text-align: center;
+}
+
+.ocr-step.active .ocr-step-label,
+.ocr-step.completed .ocr-step-label {
+    color: #101827;
+}
+
+.ocr-progress-line {
+    height: 1px;
+    flex: 1;
+
+    margin: 0 -15px 22px;
+
+    background: #d2d6dc;
+}
+
+.ocr-progress-line.completed-line {
+    background: #101827;
+}
+
+
+/* ========================================
+   TWO-COLUMN AREA
+   ======================================== */
+
+.ocr-work-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+    margin-bottom: 16px;
+
+    align-items: stretch;
+}
+
+.ocr-solution-card,
+.ocr-recognition-card,
+.ocr-retry-card,
+.ocr-comment-card,
+.ocr-tip-card {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+
+/* ========================================
+   SOLUTION
+   ======================================== */
+
+.ocr-solution-card {
+    padding: 24px;
+
+    display: flex;
+    flex-direction: column;
+
+    min-height: 0;
+}
+
+.ocr-solution-card h2 {
+    margin: 0 0 5px;
+
+    font-size: 16px;
+}
+
+.ocr-solution-card > p {
+    margin: 0 0 16px;
+
+    color: #777777;
+    font-size: 10px;
+}
+
+.ocr-image-container {
+    flex: 1;
+    min-height: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f7f7f7;
+    border: 1px solid #e5e7eb;
+
+    overflow: hidden;
+}
+
+.ocr-solution-image {
+    display: none;
+
+    width: 100%;
+    height: 100%;
+
+    object-fit: cover;
+}
+
+.ocr-no-image {
+    color: #888888;
+    font-size: 10px;
+}
+
+
+/* ========================================
+   OCR RESULT
+   ======================================== */
+
+.ocr-right-column {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+.ocr-recognition-card {
+    padding: 24px;
+}
+
+.ocr-card-heading {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+}
+
+.ocr-card-heading h2 {
+    margin: 0 0 8px;
+
+    font-size: 16px;
+}
+
+.ocr-card-heading span {
+    font-size: 9px;
+}
+
+.ocr-description {
+    margin: 0 0 16px;
+
+    color: #777777;
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.recognised-text-box {
+    padding: 18px;
+
+    background: #101010;
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 10px;
+    line-height: 1.6;
+}
+
+.recognised-text-box p {
+    margin: 10px 0 0;
+}
+
+.recognised-math + .recognised-math {
+    margin-top: 5px;
+}
+
+
+/* confidence */
+
+.confidence-row {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 18px;
+}
+
+.confidence-line {
+    height: 2px;
+    flex: 1;
+
+    background: #e5e7eb;
+}
+
+.confidence-fill {
+    width: 100%;
+    height: 100%;
+
+    background: #101827;
+}
+
+.confidence-row span {
+    font-size: 9px;
+}
+
+
+/* ========================================
+   RETRY
+   ======================================== */
+
+.ocr-retry-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 18px;
+}
+
+.ocr-retry-content {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 12px;
+}
+
+.ocr-retry-icon {
+    font-size: 17px;
+}
+
+.ocr-retry-card h3 {
+    margin: 0 0 4px;
+
+    font-size: 12px;
+}
+
+.ocr-retry-card p {
+    margin: 0;
+
+    color: #666666;
+
+    font-size: 9px;
+    line-height: 1.5;
+}
+
+.ocr-retry-button {
+    flex-shrink: 0;
+
+    padding: 11px 22px;
+
+    background: #111111;
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-size: 9px;
+}
+
+
+/* ========================================
+   COMMENT
+   ======================================== */
+
+.ocr-comment-card {
+    padding: 20px;
+
+    margin-bottom: 16px;
+}
+
+.ocr-comment-heading {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+.ocr-comment-heading h2 {
+    margin: 0;
+
+    font-size: 13px;
+}
+
+.ocr-comment-heading h2 span {
+    font-weight: 400;
+}
+
+.ocr-comment-card > p {
+    margin: 10px 0 12px;
+
+    color: #666666;
+
+    font-size: 9px;
+}
+
+.ocr-comment-card textarea {
+    width: 100%;
+    min-height: 76px;
+
+    padding: 12px;
+
+    resize: vertical;
+
+    border: 1px solid #e5e7eb;
+    outline: none;
+
+    font-family: inherit;
+    font-size: 10px;
+}
+
+.ocr-comment-card textarea::placeholder {
+    color: #b5b5b5;
+}
+
+
+/* ========================================
+   TIP
+   ======================================== */
+
+.ocr-tip-card {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+
+    gap: 14px;
+
+    padding: 18px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+}
+
+.ocr-tip-content {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 14px;
+}
+
+.ocr-tip-icon {
+    font-size: 18px;
+}
+
+.ocr-tip-card h3 {
+    margin: 0 0 4px;
+
+    font-size: 13px;
+}
+
+.ocr-tip-card p {
+    max-width: 700px;
+
+    margin: 0;
+
+    color: #606060;
+
+    font-size: 10px;
+    line-height: 1.5;
+}
+
+.evaluation-button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 12px 24px;
+
+    border: 0;
+
+    background: #111111;
+    color: #ffffff;
+
+    font-family: inherit;
+    font-size: 10px;
+
+    text-decoration: none;
+    text-align: center;
+
+    cursor: pointer;
+}
+
+
+/* ========================================
+   FOOTER
+   ======================================== */
+
+.ocr-footer {
+    min-height: 78px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 56px;
+
+    background: #1f1f1f;
+    color: #aaaaaa;
+
+    font-size: 9px;
+}
+
+
+/* ========================================
+   MOBILE
+   ======================================== */
+
+@media (max-width: 768px) {
+
+    .ocr-header {
+        height: 58px;
+        padding: 0 16px;
+    }
+
+    .ocr-logo {
+        font-size: 18px;
+    }
+
+    .ocr-desktop-nav {
+        display: none;
+    }
+
+    .ocr-header-actions {
+        margin-left: auto;
+    }
+
+    .ocr-mobile-menu-button {
+        display: block;
+    }
+
+    .ocr-mobile-nav {
+        position: absolute;
+
+        top: 58px;
+        right: 0;
+
+        width: 180px;
+
+        flex-direction: column;
+
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+
+        z-index: 1000;
+    }
+
+    .ocr-mobile-nav.open {
+        display: flex;
+    }
+
+    .ocr-mobile-nav a {
+        padding: 14px 18px;
+
+        color: #101827;
+        text-decoration: none;
+
+        font-size: 13px;
+
+        border-bottom: 1px solid #eeeeee;
+    }
+
+    .ocr-main {
+        padding: 82px 16px 24px;
+    }
+
+
+    /* topic */
+
+    .ocr-topic h1 {
+        font-size: 18px;
+    }
+
+    .ocr-topic p {
+        font-size: 9px;
+    }
+
+
+    /* progress */
+
+    .ocr-progress {
+        min-height: 82px;
+
+        padding: 14px 10px;
+    }
+
+    .ocr-step {
+        min-width: auto;
+        width: 35px;
+    }
+
+    .ocr-step-number {
+        width: 26px;
+        height: 26px;
+
+        font-size: 9px;
+    }
+
+    .ocr-step-label {
+        display: none;
+    }
+
+    .ocr-progress-line {
+        margin: 0;
+    }
+
+
+    /* content */
+
+    .ocr-work-area {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .ocr-solution-card,
+    .ocr-recognition-card {
+        padding: 14px;
+    }
+
+    .ocr-image-container {
+        min-height: 150px;
+    }
+
+    .ocr-solution-image {
+        max-height: 220px;
+    }
+
+    .ocr-right-column {
+        gap: 10px;
+    }
+
+    .ocr-card-heading h2,
+    .ocr-solution-card h2 {
+        font-size: 15px;
+    }
+
+    .recognised-text-box {
+        font-size: 8px;
+        padding: 12px;
+    }
+
+
+    /* retry */
+
+    .ocr-retry-card {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 12px;
+
+        padding: 14px;
+    }
+
+    .ocr-retry-button {
+        text-align: center;
+    }
+
+
+    /* comment */
+
+    .ocr-comment-card {
+        padding: 14px;
+    }
+
+    .ocr-comment-card textarea {
+        min-height: 70px;
+    }
+
+
+    /* tip */
+
+    .ocr-tip-card {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 14px;
+
+        padding: 14px;
+    }
+
+
+    /* footer */
+
+    .ocr-footer {
+        min-height: 72px;
+
+        flex-direction: column;
+        justify-content: center;
+
+        gap: 6px;
+
+        padding: 14px 20px;
+
+        font-size: 8px;
+    }
+}

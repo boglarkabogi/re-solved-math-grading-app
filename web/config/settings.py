@@ -69,7 +69,7 @@ DATABASES = {
 
 AUTH_USER_MODEL = "accounts.Felhasznalo"
 LOGIN_URL = "/belepes/"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -85,6 +85,9 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 STATIC_ROOT = PROJECT_DIR / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
@@ -100,3 +103,5 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED", "1") == "1"
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+
+WHITENOISE_USE_FINDERS = DEBUG
