@@ -229,9 +229,12 @@
 
             </div>
 
-            <button class="recognise-button" type="button">
-                Recognise Text →
-            </button>
+        <a
+            href="{% url 'ocr_recognition' %}?attempt={{ attempt }}"
+            class="recognise-button"
+        >
+            Recognise Text →
+        </a>
 
         </section>
 

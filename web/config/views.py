@@ -9,4 +9,28 @@ def home(request):
 
 @login_required
 def generated_assignment(request):
-    return render(request, "generated_assignment.html")
+    attempt = int(request.GET.get("attempt", 1))
+
+    return render(
+        request,
+        "generated_assignment.html",
+        {
+            "attempt": attempt,
+        },
+    )
+
+
+@login_required
+def ocr_recognition(request):
+    attempt = int(request.GET.get("attempt", 1))
+
+    # 1 és 3 között tartjuk
+    attempt = max(1, min(attempt, 3))
+
+    return render(
+        request,
+        "ocr_recognition.html",
+        {
+            "attempt": attempt,
+        },
+    )

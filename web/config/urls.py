@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from .views import generated_assignment, home
+from .views import home, generated_assignment, ocr_recognition 
 
 urlpatterns = [
     path("", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
@@ -13,6 +13,8 @@ urlpatterns = [
 
     path("home/generated/", generated_assignment, name="generated_assignment"),
 
+    path("home/recognition/", ocr_recognition, name="ocr_recognition"),
+    
     path("kilepes/", auth_views.LogoutView.as_view(), name="logout"),
 
     path("admin/", admin.site.urls),
