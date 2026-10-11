@@ -35,6 +35,7 @@ def ocr_recognition(request):
         },
     )
 
+
 @login_required
 def evaluation(request):
     attempt = int(request.GET.get("attempt", 1))
