@@ -70,7 +70,7 @@ DATABASES = {
     )
 }
 
-AUTH_USER_MODEL = "accounts.Felhasznalo"
+AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "/belepes/"
 LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/"

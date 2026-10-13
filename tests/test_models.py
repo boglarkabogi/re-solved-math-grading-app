@@ -1,15 +1,10 @@
-"""Database-backed tests: basic model behaviour.
-
-The `courses` models are still Hungarian (Kurzus, Csoport, Ora) because they
-have not been renamed yet. When they are, only the imports and the attribute
-names in the last test need to change.
-"""
+"""Database-backed tests: basic model behaviour."""
 
 import pytest
 from django.db import IntegrityError, transaction
 
 from bank.models import TaskBank, Topic
-from courses.models import Csoport, Kurzus, Ora
+from courses.models import Group, Course, Class
 
 
 @pytest.mark.django_db
@@ -48,12 +43,12 @@ def test_topic_is_shown_by_its_name():
 
 @pytest.mark.django_db
 def test_class_session_is_closed_until_it_is_opened():
-    course = Kurzus.objects.create(nev="Dimat I.", felev="2026/27/1")
-    group = Csoport.objects.create(kurzus=course, nev="1. csoport", meghivokod="ABC123")
-    session = Ora.objects.create(csoport=group, nev="1. alkalom")
+    course = Course.objects.create(name="Diszkrét matematika I.", term="2026/27/1")
+    group = Group.objects.create(course=course, name="1. csoport", invite_code="ABC123")
+    session = Class.objects.create(group=group, name="1. alkalom")
 
-    assert session.nyitott is False
+    assert session.is_open is False
 
-    session.allapot = Ora.Allapot.NYITOTT
+    session.state = Class.State.OPEN
 
-    assert session.nyitott is True
+    assert session.is_open is True

@@ -1,14 +1,14 @@
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render
 
-from .models import Beadas
+from .models import Submission
 
 
 @login_required
-def sajat_beadasok(request):
-    beadasok = (
-        Beadas.objects.filter(kiosztas__diak=request.user)
-        .select_related("kiosztas__feladat")
-        .order_by("-letrehozva")
+def my_submissions(request):
+    submissions = (
+        Submission.objects.filter(assignment__student=request.user)
+        .select_related("assignment__task")
+        .order_by("-created_at")
     )
-    return render(request, "submissions/sajat_beadasok.html", {"beadasok": beadasok})
+    return render(request, "submissions/my_submissions.html", {"submissions": submissions})

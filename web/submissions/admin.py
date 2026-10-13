@@ -1,24 +1,24 @@
 from django.contrib import admin
 
-from .models import Beadas, Ertekeles, Kiosztas, OcrKiserlet
+from .models import Assignment, Evaluation, Submission, OcrAttempt
 
 
-class OcrKiserletInline(admin.TabularInline):
-    model = OcrKiserlet
+class OcrAttemptInline(admin.TabularInline):
+    model = OcrAttempt
     extra = 0
 
 
-class ErtekelesInline(admin.StackedInline):
-    model = Ertekeles
+class EvaluationInline(admin.StackedInline):
+    model = Evaluation
     extra = 0
 
 
-@admin.register(Beadas)
-class BeadasAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "allapot", "ellenorizendo", "letrehozva")
-    list_filter = ("allapot", "ellenorizendo")
-    inlines = [OcrKiserletInline, ErtekelesInline]
+@admin.register(Submission)
+class SubmissionAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "state", "needs_review", "created_at")
+    list_filter = ("state", "needs_review")
+    inlines = [OcrAttemptInline, EvaluationInline]
 
 
-admin.site.register(Kiosztas)
-admin.site.register(Ertekeles)
+admin.site.register(Assignment)
+admin.site.register(Evaluation)

@@ -1,24 +1,24 @@
 from django.contrib import admin
 
-from .models import Csoport, GyakorlasEngedely, Kurzus, Ora, Tagsag
+from .models import Course, PracticePermission, Group, Class, Member
 
 
-@admin.register(Kurzus)
-class KurzusAdmin(admin.ModelAdmin):
-    list_display = ("nev", "felev")
+@admin.register(Course)
+class CourseAdmin(admin.ModelAdmin):
+    list_display = ("name", "term")
 
 
-@admin.register(Csoport)
-class CsoportAdmin(admin.ModelAdmin):
-    list_display = ("nev", "kurzus", "meghivokod")
-    search_fields = ("nev", "meghivokod")
+@admin.register(Group)
+class GroupAdmin(admin.ModelAdmin):
+    list_display = ("name", "course", "invite_code")
+    search_fields = ("name", "invite_code")
 
 
-@admin.register(Ora)
-class OraAdmin(admin.ModelAdmin):
-    list_display = ("__str__", "allapot", "pontba_szamit", "nyitva_ekkor", "zarva_ekkor")
-    list_filter = ("allapot", "csoport")
+@admin.register(Class)
+class ClassAdmin(admin.ModelAdmin):
+    list_display = ("__str__", "state", "counts_towards_grade", "opened_at", "closed_at")
+    list_filter = ("state", "group")
 
 
-admin.site.register(Tagsag)
-admin.site.register(GyakorlasEngedely)
+admin.site.register(Member)
+admin.site.register(PracticePermission)
