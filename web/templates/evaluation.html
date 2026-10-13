@@ -1,0 +1,333 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cim %}Evaluation | ReSolve{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/evaluation.css' %}">
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+>
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="evaluation-page">
+
+    <!-- HEADER -->
+    <header class="evaluation-header">
+
+        <div class="evaluation-logo">RESOLVE</div>
+
+        <nav class="evaluation-desktop-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="/beadas/">Assignments</a>
+        </nav>
+
+        <div class="evaluation-header-actions">
+            <button class="evaluation-language-button">HU</button>
+
+            <button
+                class="evaluation-mobile-menu-button"
+                id="evaluation-mobile-menu-button"
+                type="button"
+                aria-label="Open menu"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+
+        <nav class="evaluation-mobile-nav" id="evaluation-mobile-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="/beadas/">Assignments</a>
+        </nav>
+
+    </header>
+
+
+    <main class="evaluation-main">
+
+        <!-- TOPIC -->
+        <section class="evaluation-topic">
+            <h1>Topic: Linear Congruence</h1>
+            <p>1. Lesson · Due to: 2026.09.20</p>
+        </section>
+
+
+        <!-- PROGRESS -->
+        <section class="evaluation-progress">
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Generate Assignment</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Upload Image</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Recognise Text</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step active">
+                <div class="evaluation-step-number">4</div>
+                <div class="evaluation-step-label">Get Evaluation</div>
+            </div>
+
+        </section>
+
+
+        <!-- TOP CONTENT -->
+        <section class="evaluation-work-area">
+
+            <!-- LEFT: SOLUTION -->
+            <section class="evaluation-solution-card">
+
+                <h2>Your solution</h2>
+
+                <p>
+                    Here you can see the preview of the uploaded image.
+                </p>
+
+                <div class="evaluation-image-container">
+
+                    <div class="evaluation-image-placeholder">
+                        Uploaded solution preview
+                    </div>
+
+                </div>
+
+            </section>
+
+
+            <!-- RIGHT -->
+            <div class="evaluation-right-column">
+
+                <section class="evaluation-recognition-card">
+
+                    <div class="evaluation-card-heading">
+
+                        <h2>Your recognised text</h2>
+
+                        <span>Recognition: {{ attempt }}/3</span>
+
+                    </div>
+
+                    <p class="evaluation-recognition-description">
+                        The recognised text will be evaluated, not the image itself.
+                        If the text does not match your handwritten solution,
+                        upload a clearer image and try again.
+                    </p>
+
+                    <div class="evaluation-recognised-text">
+
+                        <div
+                            class="evaluation-math"
+                            data-expression="\text{Számoljuk ki: } 19x \equiv 16 \pmod{470}"
+                        ></div>
+
+                        <div
+                            class="evaluation-math"
+                            data-expression="16x \equiv 5 \pmod{202}"
+                        ></div>
+
+                        <p>
+                            A lineáris kongruenciák megoldásához meghatározzuk
+                            a megfelelő legnagyobb közös osztót.
+                        </p>
+
+                    </div>
+
+                    <div class="evaluation-confidence-row">
+
+                        <div class="evaluation-confidence-line">
+                            <div class="evaluation-confidence-fill"></div>
+                        </div>
+
+                        <span>100%</span>
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- RESULT AREA -->
+        <section class="evaluation-results-grid">
+
+            <!-- SCORE -->
+            <article class="evaluation-result-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▣</div>
+
+                    <div>
+                        <h2>Evaluation Result</h2>
+                        <p>
+                            Your solution has been evaluated based
+                            on the recognised text.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="evaluation-score-section">
+
+                    <span class="evaluation-score-label">Score</span>
+
+                    <div class="evaluation-score">
+                        1.75<span>/2</span>
+                    </div>
+
+                    <div class="evaluation-score-bar">
+                        <div class="evaluation-score-fill"></div>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- REASONING -->
+            <article class="evaluation-reasoning-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▤</div>
+
+                    <div>
+                        <h2>Reasoning</h2>
+                        <p>Why this score was given.</p>
+                    </div>
+                </div>
+
+                <div class="evaluation-reasoning-box">
+                    <p>
+                        The final result is correct and the overall method is
+                        mostly right. There is a small error in the second step
+                        when simplifying the congruence, but it does not affect
+                        the final answer significantly.
+                    </p>
+                </div>
+
+            </article>
+
+
+            <!-- FEEDBACK -->
+            <article class="evaluation-feedback-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▱</div>
+
+                    <div>
+                        <h2>
+                            Feedback
+                            <span>(optional)</span>
+                        </h2>
+
+                        <p>
+                            Send feedback to the teachers for supervision.
+                        </p>
+                    </div>
+                </div>
+
+                <textarea
+                    class="evaluation-feedback-input"
+                    placeholder="E.g. 'In the second line it is a 7 not a 1...'"
+                ></textarea>
+
+            </article>
+
+        </section>
+
+    </main>
+
+
+    <footer class="evaluation-footer">
+        <span>ReSolved © 2026</span>
+        <span>Adaptive AI Learning Platform</span>
+    </footer>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+<script>
+    document.querySelectorAll(".evaluation-math").forEach((element) => {
+        katex.render(
+            element.dataset.expression,
+            element,
+            {
+                throwOnError: false,
+                displayMode: false
+            }
+        );
+    });
+
+
+    const menuButton = document.getElementById(
+        "evaluation-mobile-menu-button"
+    );
+
+    const mobileNav = document.getElementById(
+        "evaluation-mobile-nav"
+    );
+
+    menuButton.addEventListener("click", () => {
+        mobileNav.classList.toggle("open");
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            mobileNav.classList.contains("open")
+        );
+    });
+</script>
+
+{% endblock %}
