@@ -1,0 +1,93 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cim %}Register | ReSolve{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="page">
+
+    <header class="header">
+        <div class="logo">RESOLVE</div>
+        <div class="language">HU</div>
+    </header>
+
+    <main class="register-wrapper">
+
+        <section class="register-card">
+
+            <h1>Create account</h1>
+
+            {% if errors %}
+                <div class="register-error-box">
+                    {% for field, message in errors.items %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <form method="post" class="register-form">
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Username"
+                    required
+                >
+
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="E-mail"
+                    required
+                >
+
+                <input
+                    type="text"
+                    name="neptun_code"
+                    placeholder="Neptun code"
+                    maxlength="6"
+                >
+
+                <input
+                    type="password"
+                    name="password1"
+                    placeholder="Password"
+                    required
+                >
+
+                <input
+                    type="password"
+                    name="password2"
+                    placeholder="Confirm password"
+                    required
+                >
+
+                <button type="submit">
+                    Register
+                </button>
+
+            </form>
+
+            <p class="login-text">
+                Already have an account?
+                <a href="{% url 'login' %}">Log in here.</a>
+            </p>
+
+        </section>
+
+    </main>
+
+    <footer class="footer">
+        <span>ReSolved © 2026</span>
+        <span>Adaptive AI Learning Platform</span>
+    </footer>
+
+</div>
+
+{% endblock %}

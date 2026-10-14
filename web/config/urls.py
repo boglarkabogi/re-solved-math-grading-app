@@ -4,15 +4,16 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from .views import evaluation, generated_assignment, home, ocr_recognition
+from .views import evaluation, generated_assignment, home, ocr_recognition, register
 
 urlpatterns = [
-    path("", auth_views.LoginView.as_view(template_name="login.html"), name="login"),
+    path("",auth_views.LoginView.as_view(template_name="login.html", redirect_authenticated_user=True,), name="login"),
     path("home/", home, name="home"),
     path("home/generated/", generated_assignment, name="generated_assignment"),
     path("home/recognition/", ocr_recognition, name="ocr_recognition"),
     path("home/evaluation/", evaluation, name="evaluation"),
-    path("kilepes/", auth_views.LogoutView.as_view(), name="logout"),
+    path("register/", register, name="register"),
+    path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
     path("admin/", admin.site.urls),
     path("beadas/", include("submissions.urls")),
 ]

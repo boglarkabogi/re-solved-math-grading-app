@@ -16,8 +16,15 @@
         <div class="home-logo">RESOLVE</div>
 
         <nav class="desktop-nav">
-            <a href="/home/" class="active">Home</a>
+            <a href="{% url 'home' %}" class="active">Home</a>
             <a href="/beadas/">Assignments</a>
+
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="logout-button">
+                    Logout
+                </button>
+            </form>
         </nav>
 
         <div class="header-actions">
@@ -39,8 +46,15 @@
         </div>
 
         <nav class="mobile-nav" id="mobile-nav">
-            <a href="/home/">Home</a>
+            <a href="{% url 'home' %}">Home</a>
             <a href="/beadas/">Assignments</a>
+
+            <form method="post" action="{% url 'logout' %}" class="mobile-logout-form">
+                {% csrf_token %}
+                <button type="submit" class="mobile-logout-button">
+                    Logout
+                </button>
+            </form>
         </nav>
 
     </header>

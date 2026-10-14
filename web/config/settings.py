@@ -108,3 +108,7 @@ DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED", "1") == "1"
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
 
 WHITENOISE_USE_FINDERS = DEBUG
+
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.UsernameOrEmailBackend",
+]

@@ -219,3 +219,25 @@ body {
     font-size: 10px;
     color: #888888;
 }
+
+.login-error {
+    margin-bottom: 14px;
+    padding: 8px 10px;
+
+    background: #f8eeee;
+    color: #b33a3a;
+
+    font-size: 10px;
+    text-align: center;
+}
+
+.login-success {
+    margin-bottom: 14px;
+    padding: 8px 10px;
+
+    background: #eef7ee;
+    color: #2f7a3e;
+
+    font-size: 10px;
+    text-align: center;
+}
