@@ -4,7 +4,7 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from .views import evaluation, generated_assignment, home, ocr_recognition, register
+from .views import evaluation, generated_assignment, home, ocr_recognition, register, course_detail, leave_course
 
 urlpatterns = [
     path("",auth_views.LoginView.as_view(template_name="login.html", redirect_authenticated_user=True,), name="login"),
@@ -14,6 +14,8 @@ urlpatterns = [
     path("home/evaluation/", evaluation, name="evaluation"),
     path("register/", register, name="register"),
     path("logout/", auth_views.LogoutView.as_view(next_page="login"), name="logout"),
+    path("course/<int:group_id>/", course_detail, name="course_detail"),
+    path("course/<int:group_id>/leave/", leave_course, name="leave_course"),
     path("admin/", admin.site.urls),
     path("beadas/", include("submissions.urls")),
 ]

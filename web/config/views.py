@@ -1,10 +1,11 @@
+from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
 
-from django.contrib import messages
+from courses.models import Group, Member
 
 User = get_user_model()
 
@@ -71,7 +72,56 @@ def register(request):
 
 @login_required
 def home(request):
-    return render(request, "home.html")
+    if request.method == "POST":
+        invite_code = request.POST.get("invite_code", "").strip()
+
+        if not invite_code:
+            messages.error(request, "Please enter a course code.")
+            return redirect("home")
+
+        try:
+            group = Group.objects.select_related("course").get(
+                invite_code=invite_code
+            )
+        except Group.DoesNotExist:
+            messages.error(request, "Invalid course code.")
+            return redirect("home")
+
+        membership, created = Member.objects.get_or_create(
+            user=request.user,
+            group=group,
+            defaults={
+                "is_teacher": False,
+            },
+        )
+
+        if not created:
+            messages.info(
+                request,
+                "You are already a member of this course."
+            )
+        else:
+            messages.success(
+                request,
+                f"You joined {group.course.name} successfully."
+            )
+
+        return redirect("home")
+
+    memberships = (
+        Member.objects
+        .filter(user=request.user)
+        .select_related("group__course")
+        .order_by("group__course__name", "group__name")
+    )
+
+    return render(
+        request,
+        "home.html",
+        {
+            "memberships": memberships,
+        },
+    )
 
 @login_required
 def generated_assignment(request):
@@ -114,3 +164,49 @@ def evaluation(request):
             "attempt": attempt,
         },
     )
+
+@login_required
+def course_detail(request, group_id):
+    membership = (
+        Member.objects
+        .select_related("group__course")
+        .filter(
+            user=request.user,
+            group_id=group_id,
+        )
+        .first()
+    )
+
+    if membership is None:
+        messages.error(request, "You are not a member of this course.")
+        return redirect("home")
+
+    return render(
+        request,
+        "course.html",
+        {
+            "membership": membership,
+            "group": membership.group,
+            "course": membership.group.course,
+        },
+    )
+
+
+@login_required
+def leave_course(request, group_id):
+    if request.method == "POST":
+        membership = Member.objects.filter(
+            user=request.user,
+            group_id=group_id,
+        ).first()
+
+        if membership is not None:
+            course_name = membership.group.course.name
+            membership.delete()
+
+            messages.success(
+                request,
+                f"You left {course_name}."
+            )
+
+    return redirect("home")
