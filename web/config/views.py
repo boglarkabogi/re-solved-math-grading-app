@@ -7,6 +7,7 @@ from django.shortcuts import redirect, render
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 
+from recognition.service import recognise_solution
 from courses.models import Group, Member, Class
 from submissions.models import Assignment, Submission, OcrAttempt
 from bank.models import Topic, TaskBank
@@ -189,12 +190,21 @@ def lesson_detail(request, group_id, lesson_id):
 
         # Már van feltöltött kép, vagy az OCR folyamatban/kész.
         if submission.state in [
+            Submission.State.ASSIGNED,
             Submission.State.IMAGE_UPLOADED,
+        ]:
+            return redirect(
+                "generated_assignment",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
+        if submission.state in [
             Submission.State.OCR_RUNNING,
             Submission.State.OCR_DONE,
         ]:
             return redirect(
-                "ocr_recognition",
+                "generated_assignment",
                 group_id=group_id,
                 lesson_id=lesson_id,
             )
@@ -465,6 +475,64 @@ def ocr_recognition(request, group_id, lesson_id):
     if ocr_attempt is None:
         return redirect(
             "generated_assignment",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    # OCR tényleges indítása
+    if request.method == "POST":
+
+        # Ha már erre a képre lefutott az OCR,
+        # ne hívjuk meg újra feleslegesen.
+        if not ocr_attempt.ocr_text:
+
+            submission.state = Submission.State.OCR_RUNNING
+            submission.save(
+                update_fields=["state"]
+            )
+
+            try:
+                result = recognise_solution(
+                    image_field=ocr_attempt.image,
+                    task_text=assignment.task.task_text,
+                )
+
+                ocr_attempt.ocr_text = result["text"]
+                ocr_attempt.model_name = result["model_name"]
+
+                ocr_attempt.save(
+                    update_fields=[
+                        "ocr_text",
+                        "model_name",
+                    ]
+                )
+
+                submission.state = Submission.State.OCR_DONE
+                submission.save(
+                    update_fields=["state"]
+                )
+
+            except Exception as error:
+                # Ha az API hibázik, a feltöltött kép ne vesszen el.
+                # Visszaengedjük a usert step 2-re.
+                submission.state = Submission.State.IMAGE_UPLOADED
+                submission.save(
+                    update_fields=["state"]
+                )
+
+                messages.error(
+                    request,
+                    f"Recognition failed: {error}"
+                )
+
+                return redirect(
+                    "generated_assignment",
+                    group_id=group_id,
+                    lesson_id=lesson_id,
+                )
+
+        return redirect(
+            "ocr_recognition",
             group_id=group_id,
             lesson_id=lesson_id,
         )
