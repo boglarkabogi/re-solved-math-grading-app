@@ -26,7 +26,6 @@ class TaskBank(models.Model):
     code = models.CharField("kód", max_length=64, unique=True)
     task_text = models.TextField("feladat szövege (Markdown + LaTeX)")
     correct_solution = models.TextField("helyes megoldás")
-    difficulty = models.PositiveSmallIntegerField("nehézség", default=2)  # 1-3
     use = models.CharField(max_length=16, choices=Use.choices, default=Use.BOTH)
     active = models.BooleanField("aktív", default=True)
     comment = models.TextField("tanári megjegyzés", blank=True)

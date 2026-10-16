@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/layout.css' %}">
+{% block page_css %}{% endblock %}
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="app-page">
+
+    {% include "includes/header.html" %}
+
+    <main class="app-main">
+        {% block app_content %}
+        {% endblock %}
+    </main>
+
+    {% include "includes/footer.html" %}
+
+</div>
+
+<script>
+    const menuButton = document.getElementById("mobile-menu-button");
+    const mobileNav = document.getElementById("mobile-nav");
+
+    if (menuButton && mobileNav) {
+        menuButton.addEventListener("click", () => {
+            mobileNav.classList.toggle("open");
+
+            const isOpen = mobileNav.classList.contains("open");
+
+            menuButton.setAttribute("aria-expanded", isOpen);
+        });
+    }
+</script>
+
+{% block page_scripts %}
+{% endblock %}
+
+{% endblock %}

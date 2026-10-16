@@ -2,11 +2,16 @@ import uuid
 
 from django.conf import settings
 from django.db import models
-
+from pathlib import Path
 
 def image_path(instance, filename):
-    return f"submissions/{instance.submission.public_id}/{uuid.uuid4().hex}.jpg"
+    extension = Path(filename).suffix.lower()
 
+    return (
+        f"submissions/"
+        f"{instance.submission.public_id}/"
+        f"{uuid.uuid4().hex}{extension}"
+    )
 
 class Assignment(models.Model):
     """Egy konkrét feladat egy konkrét diáknak."""

@@ -11,6 +11,6 @@ class TopicAdmin(admin.ModelAdmin):
 
 @admin.register(TaskBank)
 class TaskBankAdmin(admin.ModelAdmin):
-    list_display = ("code", "topic", "difficulty", "use", "active")
+    list_display = ("code", "topic", "use", "active")
     list_filter = ("topic", "use", "active")
     search_fields = ("code", "task_text", "correct_solution")

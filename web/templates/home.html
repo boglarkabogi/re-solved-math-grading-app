@@ -1,71 +1,16 @@
-{% extends "base.html" %}
+{% extends "app_base.html" %}
 {% load static %}
 
 {% block cim %}Home | ReSolve{% endblock %}
 
-{% block extra_css %}
+{% block page_css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
-{% block tartalom %}
+
+{% block app_content %}
 
 <div class="home-page">
-
-    <header class="home-header">
-
-        <div class="home-logo">RESOLVE</div>
-
-        <nav class="desktop-nav">
-            <a href="{% url 'home' %}" class="active">Home</a>
-            <a href="/beadas/">Assignments</a>
-
-            <form method="post" action="{% url 'logout' %}" class="logout-form">
-                {% csrf_token %}
-                <button type="submit" class="logout-button">
-                    Logout
-                </button>
-            </form>
-        </nav>
-
-        <div class="header-actions">
-
-            <button class="language-button" type="button">
-                HU
-            </button>
-
-            <button
-                class="mobile-menu-button"
-                type="button"
-                id="mobile-menu-button"
-                aria-label="Open menu"
-                aria-expanded="false"
-            >
-                ☰
-            </button>
-
-        </div>
-
-        <nav class="mobile-nav" id="mobile-nav">
-
-            <a href="{% url 'home' %}">Home</a>
-            <a href="/beadas/">Assignments</a>
-
-            <form
-                method="post"
-                action="{% url 'logout' %}"
-                class="mobile-logout-form"
-            >
-                {% csrf_token %}
-
-                <button type="submit" class="mobile-logout-button">
-                    Logout
-                </button>
-            </form>
-
-        </nav>
-
-    </header>
-
 
     <main class="home-main">
 
@@ -118,6 +63,7 @@
 
             </form>
 
+
             {% if memberships %}
 
                 <div class="course-list">
@@ -140,7 +86,7 @@
                                     </span>
 
                                     <div class="course-card-info">
-                                        
+
                                         <h2>
                                             {{ membership.group.course.name }}
                                         </h2>
@@ -153,17 +99,13 @@
 
                                     </div>
 
-                                    <div class="course-card-actions">
-
-                                        <span class="course-role">
-                                            {% if membership.is_teacher %}
-                                                Teacher
-                                            {% else %}
-                                                Student
-                                            {% endif %}
-                                        </span>
-
-                                    </div>
+                                    <span class="course-role">
+                                        {% if membership.is_teacher %}
+                                            Teacher
+                                        {% else %}
+                                            Student
+                                        {% endif %}
+                                    </span>
 
                                 </button>
 
@@ -183,7 +125,10 @@
                                         title="Leave course"
                                     >
 
-                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
                                             <path
                                                 d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"
                                                 fill="none"
@@ -208,77 +153,34 @@
 
                                 <div class="lesson-grid">
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 01</span>
-                                        <h3>Linear Congruence</h3>
-                                        <span class="lesson-status graded">Graded</span>
-                                    </a>
+                                    {% for lesson in membership.group.orak.all %}
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 02</span>
-                                        <h3>GCD</h3>
-                                        <span class="lesson-status uploaded">Uploaded</span>
-                                    </a>
+                                        <a
+                                            href="{% url 'lesson_detail' membership.group.id lesson.id %}"
+                                            class="lesson-card"
+                                        >
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 03</span>
-                                        <h3>Polynomial GCD</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                            <span class="lesson-number">
+                                                Lesson {{ forloop.counter|stringformat:"02d" }}
+                                            </span>
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 04</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                            <h3>
+                                                {{ lesson.name }}
+                                            </h3>
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 05</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                            <span class="lesson-status not-started">
+                                                Not started
+                                            </span>
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 06</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                        </a>
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 07</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                    {% empty %}
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 08</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                        <div class="no-lessons">
+                                            No lessons available yet.
+                                        </div>
 
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 09</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
-
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 10</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
-
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 11</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
-
-                                    <a href="#" class="lesson-card">
-                                        <span class="lesson-number">Lesson 12</span>
-                                        <h3>Lesson topic</h3>
-                                        <span class="lesson-status not-started">Not started</span>
-                                    </a>
+                                    {% endfor %}
 
                                 </div>
 
@@ -296,37 +198,24 @@
 
     </main>
 
-
-    <footer class="home-footer">
-
-        <span>ReSolved © 2026</span>
-
-        <span>Adaptive AI Learning Platform</span>
-
-    </footer>
-
 </div>
 
+{% endblock %}
+
+
+{% block page_scripts %}
 
 <script>
-    const menuButton = document.getElementById("mobile-menu-button");
-    const mobileNav = document.getElementById("mobile-nav");
-
-    menuButton.addEventListener("click", () => {
-        mobileNav.classList.toggle("open");
-
-        const isOpen = mobileNav.classList.contains("open");
-
-        menuButton.setAttribute("aria-expanded", isOpen);
-    });
-
-
     document.querySelectorAll(".course-toggle").forEach((button) => {
 
         button.addEventListener("click", () => {
 
             const courseId = button.dataset.course;
             const panel = document.getElementById(`course-${courseId}`);
+
+            if (!panel) {
+                return;
+            }
 
             panel.classList.toggle("open");
 
@@ -337,6 +226,5 @@
 
     });
 </script>
-
 
 {% endblock %}

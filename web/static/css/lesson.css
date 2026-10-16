@@ -1,0 +1,409 @@
+.lesson-page {
+    width: 100%;
+}
+
+.lesson-main {
+    width: 100%;
+    max-width: 1120px;
+
+    box-sizing: border-box;
+
+    margin: 0 auto;
+
+    padding: 40px 48px;
+}
+
+
+/* TOPIC */
+
+.lesson-topic {
+    margin-bottom: 14px;
+}
+
+.lesson-topic h1 {
+    margin: 0 0 5px;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.lesson-topic p {
+    margin: 0;
+
+    font-size: 9px;
+
+    color: #777777;
+}
+
+
+/* PROGRESS */
+
+.lesson-progress {
+    min-height: 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e7eb;
+
+    padding: 20px 100px;
+
+    margin-bottom: 12px;
+}
+
+.progress-step {
+    width: 110px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 12px;
+
+    color: #a0a4aa;
+}
+
+.progress-number {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e2e5e9;
+
+    background: #f1f3f5;
+
+    font-size: 11px;
+}
+
+.progress-step span {
+    font-size: 8px;
+
+    white-space: nowrap;
+}
+
+.progress-step.active {
+    color: #101827;
+}
+
+.progress-step.active .progress-number {
+    border-color: #101827;
+
+    background: #101827;
+    color: #ffffff;
+}
+
+.progress-line {
+    height: 1px;
+
+    flex: 1;
+
+    min-width: 40px;
+    max-width: 100px;
+
+    margin-bottom: 26px;
+
+    background: #d5d8dc;
+}
+
+
+/* ASSIGNMENT CARD */
+
+.lesson-assignment-card {
+    border: 1px solid #e5e7eb;
+
+    padding: 24px;
+
+    margin-bottom: 12px;
+}
+
+.assignment-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    margin-bottom: 18px;
+}
+
+.assignment-heading h2 {
+    margin: 0 0 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.assignment-heading p {
+    margin: 0;
+
+    font-size: 9px;
+
+    color: #777777;
+}
+
+.assignment-count {
+    font-size: 9px;
+
+    color: #555555;
+}
+
+
+/* EMPTY ASSIGNMENT */
+
+.assignment-empty {
+    min-height: 170px;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #eeeeee;
+
+    background: #f5f5f5;
+
+    color: #667085;
+}
+
+.empty-document-icon {
+    width: 26px;
+    height: 26px;
+
+    margin-bottom: 12px;
+
+    color: #97a0ad;
+}
+
+.empty-document-icon svg {
+    width: 100%;
+    height: 100%;
+}
+
+.assignment-empty p {
+    margin: 0;
+
+    font-size: 9px;
+
+    color: #4f5560;
+}
+
+
+/* EXISTING ASSIGNMENT */
+
+.assignment-existing {
+    box-sizing: border-box;
+
+    border: 1px solid #eeeeee;
+
+    background: #f8f8f8;
+
+    padding: 20px;
+}
+
+.assignment-existing h3 {
+    margin: 0 0 10px;
+
+    font-size: 13px;
+}
+
+.assignment-existing p {
+    margin: 0;
+
+    font-size: 11px;
+    line-height: 1.6;
+}
+
+
+/* TIP */
+
+.lesson-tip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e7eb;
+
+    padding: 22px 24px;
+}
+
+.tip-content {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 16px;
+
+    min-width: 0;
+}
+
+.tip-icon {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f5f5;
+
+    font-size: 11px;
+}
+
+.tip-text h3 {
+    margin: 0 0 7px;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.tip-text p {
+    max-width: 700px;
+
+    margin: 0;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #666666;
+}
+
+
+/* BUTTON */
+
+.generate-button {
+    min-width: 170px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+
+    padding: 0 18px;
+
+    background: #1f1f1f;
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-size: 9px;
+
+    transition: background 0.15s ease;
+}
+
+.generate-button:hover {
+    background: #333333;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+    .lesson-main {
+        padding: 24px 16px;
+    }
+
+    .lesson-topic h1 {
+        font-size: 18px;
+    }
+
+
+    /* PROGRESS */
+
+    .lesson-progress {
+        padding: 18px 10px;
+    }
+
+    .progress-step {
+        width: 70px;
+    }
+
+    .progress-number {
+        width: 30px;
+        height: 30px;
+    }
+
+    .progress-step span {
+        font-size: 7px;
+
+        text-align: center;
+
+        white-space: normal;
+    }
+
+    .progress-line {
+        min-width: 10px;
+
+        margin-bottom: 32px;
+    }
+
+
+    /* ASSIGNMENT */
+
+    .lesson-assignment-card {
+        padding: 18px;
+    }
+
+    .assignment-heading {
+        gap: 16px;
+    }
+
+    .assignment-empty {
+        min-height: 150px;
+    }
+
+
+    /* TIP */
+
+    .lesson-tip {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 20px;
+
+        padding: 18px;
+    }
+
+    .generate-button {
+        width: 100%;
+    }
+
+    .generate-assignment-form {
+        width: 100%;
+    }
+}   
+
+.generate-assignment-form {
+    margin: 0;
+
+    flex-shrink: 0;
+}
+
+button.generate-button {
+    border: none;
+
+    font-family: inherit;
+
+    cursor: pointer;
+}

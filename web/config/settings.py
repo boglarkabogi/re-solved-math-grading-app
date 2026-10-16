@@ -97,9 +97,6 @@ STORAGES = {
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
 
-MEDIA_URL = "media/"
-MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", PROJECT_DIR / "media"))
-
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 # csak fejlesztői gépen legyen elérhető a /dev/ felület
@@ -112,3 +109,6 @@ WHITENOISE_USE_FINDERS = DEBUG
 AUTHENTICATION_BACKENDS = [
     "accounts.backends.UsernameOrEmailBackend",
 ]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", PROJECT_DIR / "media"))

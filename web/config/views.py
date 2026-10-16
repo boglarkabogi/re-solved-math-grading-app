@@ -4,8 +4,12 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.shortcuts import redirect, render
+from django.shortcuts import get_object_or_404
+from django.db import transaction
 
-from courses.models import Group, Member
+from courses.models import Group, Member, Class
+from submissions.models import Assignment, Submission, OcrAttempt
+from bank.models import Topic, TaskBank
 
 User = get_user_model()
 
@@ -70,6 +74,7 @@ def register(request):
         },
     )
 
+
 @login_required
 def home(request):
     if request.method == "POST":
@@ -112,6 +117,7 @@ def home(request):
         Member.objects
         .filter(user=request.user)
         .select_related("group__course")
+        .prefetch_related("group__orak")
         .order_by("group__course__name", "group__name")
     )
 
@@ -124,33 +130,371 @@ def home(request):
     )
 
 @login_required
-def generated_assignment(request):
-    attempt = int(request.GET.get("attempt", 1))
+def lesson_detail(request, group_id, lesson_id):
+    lesson = get_object_or_404(
+        Class.objects.select_related("group__course"),
+        id=lesson_id,
+        group_id=group_id,
+    )
+
+    membership = Member.objects.filter(
+        user=request.user,
+        group=lesson.group,
+    ).first()
+
+    if membership is None:
+        messages.error(
+            request,
+            "You are not a member of this course."
+        )
+        return redirect("home")
+
+    lesson_ids = list(
+        Class.objects
+        .filter(group=lesson.group)
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+
+    lesson_number = lesson_ids.index(lesson.id) + 1
+
+    assignment = (
+        Assignment.objects
+        .filter(
+            student=request.user,
+            session=lesson,
+            mode=Assignment.Mode.CLASS,
+        )
+        .select_related("task", "task__topic")
+        .first()
+    )
+
+    if assignment is not None:
+        submission = getattr(
+            assignment,
+            "submission",
+            None,
+        )
+
+        # Van generált feladat, de még nincs kép feltöltve.
+        if (
+            submission is None
+            or submission.state == Submission.State.ASSIGNED
+        ):
+            return redirect(
+                "generated_assignment",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
+        # Már van feltöltött kép, vagy az OCR folyamatban/kész.
+        if submission.state in [
+            Submission.State.IMAGE_UPLOADED,
+            Submission.State.OCR_RUNNING,
+            Submission.State.OCR_DONE,
+        ]:
+            return redirect(
+                "ocr_recognition",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
+    return render(
+        request,
+        "lesson.html",
+        {
+            "lesson": lesson,
+            "lesson_number": lesson_number,
+            "course": lesson.group.course,
+            "group": lesson.group,
+            "assignment": assignment,
+        },
+    )
+
+@login_required
+@transaction.atomic
+def generate_assignment(request, group_id, lesson_id):
+    if request.method != "POST":
+        return redirect(
+            "lesson_detail",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    lesson = get_object_or_404(
+        Class.objects.select_related("group__course"),
+        id=lesson_id,
+        group_id=group_id,
+    )
+
+    membership = Member.objects.filter(
+        user=request.user,
+        group=lesson.group,
+    ).first()
+
+    if membership is None:
+        messages.error(
+            request,
+            "You are not a member of this course."
+        )
+        return redirect("home")
+
+    # Ha már van feladata ehhez a lessonhöz,
+    # nem generálunk másodikat.
+    assignment = (
+        Assignment.objects
+        .filter(
+            student=request.user,
+            session=lesson,
+            mode=Assignment.Mode.CLASS,
+        )
+        .first()
+    )
+
+    if assignment is not None:
+        return redirect(
+            "generated_assignment",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    # A Class.name nálunk maga a topic neve.
+    topic = Topic.objects.filter(
+        name__iexact=lesson.name
+    ).first()
+
+    if topic is None:
+        messages.error(
+            request,
+            f"No task topic exists for {lesson.name}."
+        )
+        return redirect(
+            "lesson_detail",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    # Csak aktív, órai használatra engedélyezett feladatok.
+    task = (
+        TaskBank.objects
+        .filter(
+            topic=topic,
+            active=True,
+            use__in=[
+                TaskBank.Use.CLASS,
+                TaskBank.Use.BOTH,
+            ],
+        )
+        .order_by("?")
+        .first()
+    )
+
+    if task is None:
+        messages.error(
+            request,
+            f"No active assignments are available for {lesson.name}."
+        )
+        return redirect(
+            "lesson_detail",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    assignment = Assignment.objects.create(
+        student=request.user,
+        task=task,
+        session=lesson,
+        mode=Assignment.Mode.CLASS,
+    )
+
+    Submission.objects.create(
+        assignment=assignment,
+    )
+
+    return redirect(
+        "generated_assignment",
+        group_id=group_id,
+        lesson_id=lesson_id,
+    )
+
+@login_required
+@transaction.atomic
+def generated_assignment(request, group_id, lesson_id):
+    lesson = get_object_or_404(
+        Class.objects.select_related("group__course"),
+        id=lesson_id,
+        group_id=group_id,
+    )
+
+    membership = Member.objects.filter(
+        user=request.user,
+        group=lesson.group,
+    ).first()
+
+    if membership is None:
+        messages.error(
+            request,
+            "You are not a member of this course."
+        )
+        return redirect("home")
+
+    lesson_ids = list(
+        Class.objects
+        .filter(group=lesson.group)
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+
+    lesson_number = lesson_ids.index(lesson.id) + 1
+
+    assignment = (
+        Assignment.objects
+        .filter(
+            student=request.user,
+            session=lesson,
+            mode=Assignment.Mode.CLASS,
+        )
+        .select_related("task", "task__topic")
+        .first()
+    )
+
+    if assignment is None:
+        return redirect(
+            "lesson_detail",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    submission, _ = Submission.objects.get_or_create(
+        assignment=assignment
+    )
+
+    if request.method == "POST":
+        image = request.FILES.get("solution_image")
+
+        if image is None:
+            messages.error(
+                request,
+                "Please select an image."
+            )
+
+        elif image.size > 20 * 1024 * 1024:
+            messages.error(
+                request,
+                "The image must be smaller than 20 MB."
+            )
+
+        elif image.content_type not in [
+            "image/jpeg",
+            "image/png",
+        ]:
+            messages.error(
+                request,
+                "Only JPG, JPEG and PNG images are allowed."
+            )
+
+        else:
+            ocr_attempt = OcrAttempt.objects.create(
+                submission=submission,
+                image=image,
+            )
+
+            submission.state = Submission.State.IMAGE_UPLOADED
+            submission.save(update_fields=["state"])
+
+            return redirect(
+                "ocr_recognition",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
+    attempt = submission.ocr_attempts.count() + 1
+    attempt = max(1, min(attempt, 3))
 
     return render(
         request,
         "generated_assignment.html",
         {
+            "lesson": lesson,
+            "lesson_number": lesson_number,
+            "course": lesson.group.course,
+            "group": lesson.group,
+            "assignment": assignment,
+            "submission": submission,
             "attempt": attempt,
         },
     )
 
-
 @login_required
-def ocr_recognition(request):
-    attempt = int(request.GET.get("attempt", 1))
+def ocr_recognition(request, group_id, lesson_id):
+    lesson = get_object_or_404(
+        Class.objects.select_related("group__course"),
+        id=lesson_id,
+        group_id=group_id,
+    )
 
-    # 1 és 3 között tartjuk
+    membership = Member.objects.filter(
+        user=request.user,
+        group=lesson.group,
+    ).first()
+
+    if membership is None:
+        return redirect("home")
+
+    assignment = get_object_or_404(
+        Assignment.objects.select_related(
+            "task",
+            "task__topic",
+        ),
+        student=request.user,
+        session=lesson,
+        mode=Assignment.Mode.CLASS,
+    )
+
+    submission = get_object_or_404(
+        Submission,
+        assignment=assignment,
+    )
+
+    ocr_attempt = (
+        submission.ocr_attempts
+        .order_by("-created_at")
+        .first()
+    )
+
+    if ocr_attempt is None:
+        return redirect(
+            "generated_assignment",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    lesson_ids = list(
+        Class.objects
+        .filter(group=lesson.group)
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
+
+    lesson_number = lesson_ids.index(lesson.id) + 1
+
+    attempt = submission.ocr_attempts.count()
     attempt = max(1, min(attempt, 3))
 
     return render(
         request,
         "ocr_recognition.html",
         {
+            "lesson": lesson,
+            "lesson_number": lesson_number,
+            "group": lesson.group,
+            "course": lesson.group.course,
+            "assignment": assignment,
+            "submission": submission,
+            "ocr_attempt": ocr_attempt,
             "attempt": attempt,
         },
     )
-
 
 @login_required
 def evaluation(request):

@@ -1,0 +1,255 @@
+{% extends "app_base.html" %}
+{% load static %}
+
+{% block cim %}{{ lesson.name }} | ReSolve{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/lesson.css' %}">
+{% endblock %}
+
+{% block app_content %}
+
+<div class="lesson-page">
+
+    <main class="lesson-main">
+
+        <!-- TOPIC -->
+
+        <section class="lesson-topic">
+
+            <h1>
+                Topic: {{ lesson.name }}
+            </h1>
+
+            <p>
+                {{ lesson_number }}. Lesson · Due to: 2026.09.20
+            </p>
+
+        </section>
+
+
+        <!-- PROGRESS -->
+
+        <section class="lesson-progress">
+
+            <div class="progress-step active">
+
+                <div class="progress-number">
+                    1
+                </div>
+
+                <span>
+                    Generate Assignment
+                </span>
+
+            </div>
+
+
+            <div class="progress-line"></div>
+
+
+            <div class="progress-step">
+
+                <div class="progress-number">
+                    2
+                </div>
+
+                <span>
+                    Upload Image
+                </span>
+
+            </div>
+
+
+            <div class="progress-line"></div>
+
+
+            <div class="progress-step">
+
+                <div class="progress-number">
+                    3
+                </div>
+
+                <span>
+                    Recognise Text
+                </span>
+
+            </div>
+
+
+            <div class="progress-line"></div>
+
+
+            <div class="progress-step">
+
+                <div class="progress-number">
+                    4
+                </div>
+
+                <span>
+                    Get Evaluation
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- ASSIGNMENTS -->
+
+        <section class="lesson-assignment-card">
+
+            <div class="assignment-heading">
+
+                <div>
+
+                    <h2>
+                        Your assignments
+                    </h2>
+
+                    <p>
+                        You can only generate one assignment per topic.
+                    </p>
+
+                </div>
+
+                <span class="assignment-count">
+                    Generated:
+                    {% if assignment %}
+                        1/1
+                    {% else %}
+                        0/1
+                    {% endif %}
+                </span>
+
+            </div>
+
+
+            {% if assignment %}
+
+                <div class="assignment-existing">
+
+                    <h3>
+                        Your assignment
+                    </h3>
+
+                    <p>
+                        {{ assignment.task.task_text }}
+                    </p>
+
+                </div>
+
+            {% else %}
+
+                <div class="assignment-empty">
+
+                    <div class="empty-document-icon">
+
+                        <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                            <path
+                                d="M7 3h7l4 4v14H7z"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linejoin="round"
+                            />
+
+                            <path
+                                d="M14 3v5h5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linejoin="round"
+                            />
+
+                            <path
+                                d="M10 13h5M10 16h5"
+                                fill="none"
+                                stroke="currentColor"
+                                stroke-width="1.4"
+                                stroke-linecap="round"
+                            />
+
+                        </svg>
+
+                    </div>
+
+                    <p>
+                        No assignments generated yet!
+                    </p>
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+
+        <!-- TIP / ACTION -->
+
+        <section class="lesson-tip">
+
+            <div class="tip-content">
+
+                <div class="tip-icon">
+                    ?
+                </div>
+
+                <div class="tip-text">
+
+                    <h3>
+                        Tip
+                    </h3>
+
+                    <p>
+                        Generate an assignment from the given topic weekly.
+                        Upload your solution until the deadline and wait for
+                        the AI based evaluation. Then check your corrected
+                        homework, if needed you can always give feedback
+                        for the professors.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            {% if assignment %}
+
+                <a
+                    href="{% url 'generated_assignment' group.id lesson.id %}"
+                    class="generate-button"
+                >
+                    View Assignment
+                    <span>→</span>
+                </a>
+
+            {% else %}
+
+                <form
+                    method="post"
+                    action="{% url 'generate_assignment' group.id lesson.id %}"
+                    class="generate-assignment-form"
+                >
+                    {% csrf_token %}
+
+                    <button
+                        type="submit"
+                        class="generate-button"
+                    >
+                        Generate Assignment
+                        <span>→</span>
+                    </button>
+
+                </form>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+{% endblock %}
