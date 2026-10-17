@@ -13,7 +13,6 @@
     box-sizing: border-box;
 
     margin: 0 auto;
-
     padding: 40px 48px;
 }
 
@@ -35,12 +34,11 @@
     margin: 0;
 
     font-size: 9px;
-
     color: #777777;
 }
 
 
-/* PROGRESS */
+/* PROGRESS STEPS */
 
 .ocr-progress {
     min-height: 100px;
@@ -54,7 +52,6 @@
     border: 1px solid #e5e7eb;
 
     padding: 20px 100px;
-
     margin-bottom: 12px;
 
     background: #ffffff;
@@ -88,19 +85,6 @@
     background: #f1f3f5;
 
     font-size: 11px;
-}
-
-.ocr-progress-line {
-    height: 1px;
-
-    flex: 1;
-
-    min-width: 40px;
-    max-width: 100px;
-
-    margin-bottom: 26px;
-
-    background: #d5d8dc;
 }
 
 .ocr-step-label {
@@ -170,7 +154,6 @@
 
 .ocr-work-area {
     display: grid;
-
     grid-template-columns: 1fr 1fr;
 
     gap: 12px;
@@ -201,6 +184,8 @@
 .ocr-solution-card {
     min-width: 0;
 
+    height: 100%;
+
     display: flex;
     flex-direction: column;
 
@@ -224,6 +209,7 @@
 
 .ocr-image-container {
     min-height: 170px;
+
     flex: 1;
 
     display: flex;
@@ -262,6 +248,8 @@
 .ocr-right-column {
     min-width: 0;
 
+    height: 100%;
+
     display: flex;
     flex-direction: column;
 
@@ -273,6 +261,8 @@
 
 .ocr-recognition-card {
     padding: 24px;
+
+    flex: 1;
 }
 
 .ocr-card-heading {
@@ -308,7 +298,8 @@
 }
 
 .recognised-text-box {
-    min-height: 70px;
+    min-height: 50px;
+    max-height: 420px;
 
     box-sizing: border-box;
 
@@ -320,6 +311,9 @@
     font-family: monospace;
     font-size: 10px;
     line-height: 1.6;
+
+    overflow-y: auto;
+    overflow-x: auto;
 }
 
 .recognised-text {
@@ -342,6 +336,48 @@
 
 .recognised-math + .recognised-math {
     margin-top: 5px;
+}
+
+
+/* MODEL PROGRESS */
+
+.ocr-model-progress {
+    margin-top: 18px;
+}
+
+.ocr-model-progress-top {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 7px;
+
+    font-size: 9px;
+}
+
+.ocr-model-progress-track {
+    width: 100%;
+    height: 2px;
+
+    background: #e5e7eb;
+
+    overflow: hidden;
+}
+
+.ocr-model-progress-fill {
+    width: 0;
+    height: 100%;
+
+    background: #101010;
+
+    transition: width 0.25s linear;
+}
+
+.ocr-model-progress p {
+    margin: 7px 0 0;
+
+    font-size: 8px;
+
+    color: #777777;
 }
 
 
@@ -376,7 +412,7 @@
 }
 
 
-/* RETRY */
+/* RETRY / OCR ACTION */
 
 .ocr-retry-card {
     display: flex;
@@ -386,6 +422,8 @@
     gap: 20px;
 
     padding: 18px;
+
+    flex-shrink: 0;
 }
 
 .ocr-retry-content {
@@ -395,6 +433,8 @@
     align-items: flex-start;
 
     gap: 12px;
+
+    flex: 1;
 }
 
 .ocr-retry-icon {
@@ -419,13 +459,27 @@
     color: #666666;
 }
 
-.ocr-retry-button {
-    min-width: 110px;
-    height: 38px;
+
+/* OCR ACTION BUTTONS */
+
+.ocr-retry-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
 
     flex-shrink: 0;
+}
 
-    display: flex;
+.ocr-run-form {
+    margin: 0;
+}
+
+.ocr-retry-button,
+.ocr-upload-another {
+    min-height: 42px;
+
+    display: inline-flex;
     align-items: center;
     justify-content: center;
 
@@ -433,16 +487,50 @@
 
     padding: 0 16px;
 
-    background: #1f1f1f;
-    color: #ffffff;
+    border: 1px solid #1f1f1f;
+
+    font-family: inherit;
+    font-size: 9px;
+    line-height: 1;
 
     text-decoration: none;
 
-    font-size: 9px;
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.ocr-retry-button {
+    min-width: 130px;
+
+    background: #1f1f1f;
+    color: #ffffff;
 }
 
 .ocr-retry-button:hover {
     background: #333333;
+}
+
+.ocr-retry-button:disabled {
+    cursor: wait;
+
+    opacity: 0.65;
+}
+
+.ocr-upload-another {
+    min-width: 135px;
+
+    background: #ffffff;
+    color: #1f1f1f;
+}
+
+.ocr-upload-another:hover {
+    background: #f5f5f5;
 }
 
 
@@ -657,6 +745,10 @@
         padding: 18px;
     }
 
+    .ocr-solution-card {
+        height: auto;
+    }
+
     .ocr-image-container {
         min-height: 150px;
     }
@@ -667,6 +759,8 @@
     }
 
     .ocr-right-column {
+        height: auto;
+
         gap: 12px;
     }
 
@@ -680,8 +774,24 @@
         gap: 16px;
     }
 
-    .ocr-retry-button {
+    .ocr-retry-actions {
         width: 100%;
+
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 8px;
+    }
+
+    .ocr-run-form {
+        width: 100%;
+    }
+
+    .ocr-retry-button,
+    .ocr-upload-another {
+        width: 100%;
+
+        min-width: 0;
     }
 
 

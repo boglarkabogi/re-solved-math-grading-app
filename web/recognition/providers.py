@@ -2,12 +2,6 @@ import os
 
 
 OCR_MODELS = {
-    "dots": {
-        "name": "dots-studio/dots-3-note-preview:free",
-        "url": "https://openrouter.ai/api/v1/chat/completions",
-        "api_key_env": "OPENROUTER_API_KEY",
-    },
-
     "kimi": {
         "name": "moonshotai/kimi-k3",
         "url": "https://integrate.api.nvidia.com/v1/chat/completions",
@@ -25,6 +19,11 @@ OCR_MODELS = {
         "name": "meta/llama-3.2-11b-vision-instruct",
         "url": "https://integrate.api.nvidia.com/v1/chat/completions",
         "api_key_env": "LLM_API_KEY",
+    },
+    "qwen38": {
+        "name": "qwen/qwen3.8-27b",
+        "url": "https://openrouter.ai/api/v1/chat/completions",
+        "api_key_env": "OPENROUTER_API_KEY",
     },
 }
 

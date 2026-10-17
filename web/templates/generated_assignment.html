@@ -114,7 +114,6 @@
 
         <form
             method="post"
-            action="{% url 'ocr_recognition' group.id lesson.id %}"
             enctype="multipart/form-data"
             class="generated-upload-form"
         >
@@ -184,7 +183,7 @@
                         <input
                             type="file"
                             id="solution-image"
-                            name="image"
+                            name="solution_image"
                             accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                             required
                             hidden

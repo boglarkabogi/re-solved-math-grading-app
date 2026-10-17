@@ -3,14 +3,18 @@ from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.shortcuts import redirect, render
-from django.shortcuts import get_object_or_404
+from django.shortcuts import redirect, render, get_object_or_404
 from django.db import transaction
+from django.urls import reverse
 
 from recognition.service import recognise_solution
 from courses.models import Group, Member, Class
 from submissions.models import Assignment, Submission, OcrAttempt
 from bank.models import Topic, TaskBank
+
+import logging
+
+logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
@@ -177,7 +181,7 @@ def lesson_detail(request, group_id, lesson_id):
             None,
         )
 
-        # Van generált feladat, de még nincs kép feltöltve.
+        # Assignment exists, but no image has been uploaded yet.
         if (
             submission is None
             or submission.state == Submission.State.ASSIGNED
@@ -188,23 +192,15 @@ def lesson_detail(request, group_id, lesson_id):
                 lesson_id=lesson_id,
             )
 
-        # Már van feltöltött kép, vagy az OCR folyamatban/kész.
+        # An image already exists.
+        # Continue from the recognition page instead of showing upload again.
         if submission.state in [
-            Submission.State.ASSIGNED,
             Submission.State.IMAGE_UPLOADED,
-        ]:
-            return redirect(
-                "generated_assignment",
-                group_id=group_id,
-                lesson_id=lesson_id,
-            )
-
-        if submission.state in [
             Submission.State.OCR_RUNNING,
             Submission.State.OCR_DONE,
         ]:
             return redirect(
-                "generated_assignment",
+                "ocr_recognition",
                 group_id=group_id,
                 lesson_id=lesson_id,
             )
@@ -412,11 +408,15 @@ def generated_assignment(request, group_id, lesson_id):
             submission.state = Submission.State.IMAGE_UPLOADED
             submission.save(update_fields=["state"])
 
-            return redirect(
+            url = reverse(
                 "ocr_recognition",
-                group_id=group_id,
-                lesson_id=lesson_id,
+                kwargs={
+                    "group_id": group_id,
+                    "lesson_id": lesson_id,
+                },
             )
+
+            return redirect(f"{url}?autostart=1")
 
     attempt = submission.ocr_attempts.count() + 1
     attempt = max(1, min(attempt, 3))
@@ -479,57 +479,100 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    # OCR tényleges indítása
+    # Run OCR
     if request.method == "POST":
 
-        # Ha már erre a képre lefutott az OCR,
-        # ne hívjuk meg újra feleslegesen.
-        if not ocr_attempt.ocr_text:
+        # Maximum 3 OCR runs for this uploaded image
+        if ocr_attempt.ocr_run_count >= 3:
+            messages.error(
+                request,
+                "You have already used all 3 recognition attempts for this image."
+            )
 
-            submission.state = Submission.State.OCR_RUNNING
+            return redirect(
+                "ocr_recognition",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
+        logger.info(
+            "OCR request started: user=%s submission=%s ocr_attempt=%s run=%s image=%s",
+            request.user.id,
+            submission.id,
+            ocr_attempt.id,
+            ocr_attempt.ocr_run_count + 1,
+            ocr_attempt.image.name,
+        )
+
+        submission.state = Submission.State.OCR_RUNNING
+        submission.save(
+            update_fields=["state"]
+        )
+
+        try:
+            logger.info(
+                "Calling recognise_solution: task=%s",
+                assignment.task.code,
+            )
+
+            result = recognise_solution(
+                image_field=ocr_attempt.image,
+                task_text=assignment.task.task_text,
+            )
+
+            logger.info(
+                "recognise_solution returned successfully: model=%s text_length=%s",
+                result.get("model_name"),
+                len(result.get("text", "")),
+            )
+
+            ocr_attempt.ocr_text = result["text"]
+            ocr_attempt.model_name = result["model_name"]
+            ocr_attempt.ocr_run_count += 1
+
+            ocr_attempt.save(
+                update_fields=[
+                    "ocr_text",
+                    "model_name",
+                    "ocr_run_count",
+                ]
+            )
+
+            submission.state = Submission.State.OCR_DONE
             submission.save(
                 update_fields=["state"]
             )
 
-            try:
-                result = recognise_solution(
-                    image_field=ocr_attempt.image,
-                    task_text=assignment.task.task_text,
-                )
+            logger.info(
+                "OCR result saved successfully: ocr_attempt=%s run_count=%s",
+                ocr_attempt.id,
+                ocr_attempt.ocr_run_count,
+            )
 
-                ocr_attempt.ocr_text = result["text"]
-                ocr_attempt.model_name = result["model_name"]
+        except Exception:
+            logger.exception(
+                "OCR request failed: user=%s submission=%s ocr_attempt=%s",
+                request.user.id,
+                submission.id,
+                ocr_attempt.id,
+            )
 
-                ocr_attempt.save(
-                    update_fields=[
-                        "ocr_text",
-                        "model_name",
-                    ]
-                )
+            # Keep the uploaded image if the API fails
+            submission.state = Submission.State.IMAGE_UPLOADED
+            submission.save(
+                update_fields=["state"]
+            )
 
-                submission.state = Submission.State.OCR_DONE
-                submission.save(
-                    update_fields=["state"]
-                )
+            messages.error(
+                request,
+                "Recognition failed. Check the server logs for details."
+            )
 
-            except Exception as error:
-                # Ha az API hibázik, a feltöltött kép ne vesszen el.
-                # Visszaengedjük a usert step 2-re.
-                submission.state = Submission.State.IMAGE_UPLOADED
-                submission.save(
-                    update_fields=["state"]
-                )
-
-                messages.error(
-                    request,
-                    f"Recognition failed: {error}"
-                )
-
-                return redirect(
-                    "generated_assignment",
-                    group_id=group_id,
-                    lesson_id=lesson_id,
-                )
+            return redirect(
+                "ocr_recognition",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
 
         return redirect(
             "ocr_recognition",
@@ -546,8 +589,7 @@ def ocr_recognition(request, group_id, lesson_id):
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
-    attempt = submission.ocr_attempts.count()
-    attempt = max(1, min(attempt, 3))
+    attempt = ocr_attempt.ocr_run_count
 
     return render(
         request,

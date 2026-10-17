@@ -4,7 +4,7 @@
     python web/manage.py import_tasks data/tasks.csv --dry-run
 
 Required columns / keys: topic, code, task_text, correct_solution
-Optional: topic_name, difficulty, use, comment, active
+Optional: topic_name, use, comment, active
 
 The column names match the model field names, so there is nothing to translate.
 Safe to run again: existing tasks are matched by `code` and updated, so you never
@@ -104,7 +104,6 @@ class Command(BaseCommand):
                             "topic": topic,
                             "task_text": (row.get("task_text") or "").strip(),
                             "correct_solution": (row.get("correct_solution") or "").strip(),
-                            "difficulty": int(row.get("difficulty") or 2),
                             "use": use,
                             "comment": (row.get("comment") or "").strip(),
                             "active": as_bool(row.get("active")),
