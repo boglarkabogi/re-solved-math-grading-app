@@ -1,11 +1,14 @@
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
 
 
 def image_path(instance, filename):
-    return f"submissions/{instance.submission.public_id}/{uuid.uuid4().hex}.jpg"
+    extension = Path(filename).suffix.lower()
+
+    return f"submissions/{instance.submission.public_id}/{uuid.uuid4().hex}{extension}"
 
 
 class Assignment(models.Model):
@@ -15,7 +18,9 @@ class Assignment(models.Model):
         CLASS = "orai", "órai"
         PRACTICE = "gyakorlo", "gyakorló"
 
-    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assignments")
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assignments"
+    )
     task = models.ForeignKey("bank.TaskBank", on_delete=models.PROTECT, related_name="assignments")
     session = models.ForeignKey(
         "courses.Class", null=True, blank=True, on_delete=models.CASCADE, related_name="assignments"
@@ -28,7 +33,9 @@ class Assignment(models.Model):
         verbose_name_plural = "kiosztások"
         constraints = [
             models.UniqueConstraint(
-                fields=["student", "session"], condition=models.Q(mode="orai"), name="one_class_task_per_student"
+                fields=["student", "session"],
+                condition=models.Q(mode="orai"),
+                name="one_class_task_per_student",
             ),
         ]
 
@@ -69,6 +76,7 @@ class OcrAttempt(models.Model):
     image = models.ImageField("kép", upload_to=image_path)
     ocr_text = models.TextField("felismert szöveg", blank=True)
     model_name = models.CharField("modell", max_length=120, blank=True)
+    ocr_run_count = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

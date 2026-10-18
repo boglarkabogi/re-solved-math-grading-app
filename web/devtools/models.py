@@ -63,7 +63,4 @@ class BenchmarkRun(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return (
-            f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} "
-            f"({self.match_count}/{self.case_count})"
-        )
+        return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} ({self.match_count}/{self.case_count})"

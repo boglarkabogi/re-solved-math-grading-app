@@ -72,6 +72,7 @@ Emlékeztető:
   stb.) — a matekot sima szöveggel írd (pl. `x^2 + x + 1`, `Z_5[x]`, `gcd`).
 """
 
+
 def user_message(feladat, helyes_megoldas, megoldas_szoveg, diak_megjegyzes=None):
     parts = [
         f"FELADAT:\n{feladat}",

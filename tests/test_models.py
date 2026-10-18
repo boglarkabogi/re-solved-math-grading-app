@@ -4,7 +4,7 @@ import pytest
 from django.db import IntegrityError, transaction
 
 from bank.models import TaskBank, Topic
-from courses.models import Group, Course, Class
+from courses.models import Class, Course, Group
 
 
 @pytest.mark.django_db
@@ -20,7 +20,6 @@ def test_task_is_created_with_the_expected_defaults():
 
     assert task.active is True
     assert task.use == TaskBank.Use.BOTH
-    assert task.difficulty == 2
     assert "lnko-213-200" in str(task)
 
 

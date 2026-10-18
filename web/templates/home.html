@@ -1,183 +1,229 @@
-{% extends "base.html" %}
+{% extends "app_base.html" %}
 {% load static %}
 
 {% block cim %}Home | ReSolve{% endblock %}
 
-{% block extra_css %}
+{% block page_css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
-{% block tartalom %}
+
+{% block app_content %}
 
 <div class="home-page">
 
-    <header class="home-header">
-
-        <div class="home-logo">RESOLVE</div>
-
-        <nav class="desktop-nav">
-            <a href="{% url 'home' %}" class="active">Home</a>
-            <a href="/beadas/">Assignments</a>
-
-            <form method="post" action="{% url 'logout' %}" class="logout-form">
-                {% csrf_token %}
-                <button type="submit" class="logout-button">
-                    Logout
-                </button>
-            </form>
-        </nav>
-
-        <div class="header-actions">
-
-            <button class="language-button">
-                HU
-            </button>
-
-            <button
-                class="mobile-menu-button"
-                type="button"
-                id="mobile-menu-button"
-                aria-label="Open menu"
-                aria-expanded="false"
-            >
-                ☰
-            </button>
-
-        </div>
-
-        <nav class="mobile-nav" id="mobile-nav">
-            <a href="{% url 'home' %}">Home</a>
-            <a href="/beadas/">Assignments</a>
-
-            <form method="post" action="{% url 'logout' %}" class="mobile-logout-form">
-                {% csrf_token %}
-                <button type="submit" class="mobile-logout-button">
-                    Logout
-                </button>
-            </form>
-        </nav>
-
-    </header>
-
-
     <main class="home-main">
 
-        <section class="topic-section">
-            <h1>Topic: Linear Congruence</h1>
-            <p>1. Lesson · Due to: 2026.09.20</p>
-        </section>
+        <section class="courses-section">
 
+            <div class="courses-heading">
 
-        <section class="progress-box">
+                <h1>Your courses</h1>
 
-            <div class="progress-step active">
-                <div class="step-number">1</div>
-                <div class="step-label">Generate Assignment</div>
+                <p>
+                    Join a course using the code provided by your teacher.
+                </p>
+
             </div>
 
-            <div class="progress-line"></div>
 
-            <div class="progress-step">
-                <div class="step-number">2</div>
-                <div class="step-label">Upload Image</div>
-            </div>
+            {% if messages %}
 
-            <div class="progress-line"></div>
+                <div class="course-messages">
 
-            <div class="progress-step">
-                <div class="step-number">3</div>
-                <div class="step-label">Recognise Text</div>
-            </div>
+                    {% for message in messages %}
 
-            <div class="progress-line"></div>
+                        <div class="course-message {{ message.tags }}">
+                            {{ message }}
+                        </div>
 
-            <div class="progress-step">
-                <div class="step-number">4</div>
-                <div class="step-label">Get Evaluation</div>
-            </div>
+                    {% endfor %}
 
-        </section>
-
-
-        <section class="assignments-section">
-
-            <div class="section-heading">
-
-                <div>
-                    <h2>Your assignments</h2>
-                    <p>You can only generate one assignment per topic.</p>
                 </div>
 
-                <span>Generated: 0/1</span>
-
-            </div>
+            {% endif %}
 
 
-            <div class="empty-assignment">
+            <form method="post" class="join-course-form">
 
-                <div class="document-icon">
-                    📄
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="invite_code"
+                    placeholder="Course code"
+                    maxlength="16"
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    Add course
+                </button>
+
+            </form>
+
+
+            {% if memberships %}
+
+                <div class="course-list">
+
+                    {% for membership in memberships %}
+
+                        <div class="course-card-wrapper">
+
+                            <div class="course-card">
+
+                                <button
+                                    type="button"
+                                    class="course-toggle"
+                                    data-course="{{ membership.group.id }}"
+                                    aria-expanded="false"
+                                >
+
+                                    <span class="course-chevron">
+                                        ▾
+                                    </span>
+
+                                    <div class="course-card-info">
+
+                                        <h2>
+                                            {{ membership.group.course.name }}
+                                        </h2>
+
+                                        <p>
+                                            {{ membership.group.name }}
+                                            ·
+                                            {{ membership.group.course.term }}
+                                        </p>
+
+                                    </div>
+
+                                    <span class="course-role">
+                                        {% if membership.is_teacher %}
+                                            Teacher
+                                        {% else %}
+                                            Student
+                                        {% endif %}
+                                    </span>
+
+                                </button>
+
+
+                                <form
+                                    method="post"
+                                    action="{% url 'leave_course' membership.group.id %}"
+                                    class="leave-course-form"
+                                    onsubmit="return confirm('Are you sure you want to leave this course?');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="leave-course-button"
+                                        aria-label="Leave course"
+                                        title="Leave course"
+                                    >
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.5"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            />
+                                        </svg>
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+
+                            <div
+                                class="lesson-panel"
+                                id="course-{{ membership.group.id }}"
+                            >
+
+                                <div class="lesson-grid">
+
+                                    {% for lesson in membership.group.orak.all %}
+
+                                        <a
+                                            href="{% url 'lesson_detail' membership.group.id lesson.id %}"
+                                            class="lesson-card"
+                                        >
+
+                                            <span class="lesson-number">
+                                                Lesson {{ forloop.counter|stringformat:"02d" }}
+                                            </span>
+
+                                            <h3>
+                                                {{ lesson.name }}
+                                            </h3>
+
+                                            <span class="lesson-status not-started">
+                                                Not started
+                                            </span>
+
+                                        </a>
+
+                                    {% empty %}
+
+                                        <div class="no-lessons">
+                                            No lessons available yet.
+                                        </div>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
                 </div>
 
-                <p>No assignments generated yet!</p>
-
-            </div>
-
-        </section>
-
-
-        <section class="tip-section">
-
-            <div class="tip-content">
-
-                <div class="tip-icon">
-                    💡
-                </div>
-
-                <div>
-                    <h3>Tip</h3>
-
-                    <p>
-                        Generate an assignment from the given topic weekly.
-                        Upload your solution until the deadline and wait for
-                        the AI based evaluation. Then check your corrected
-                        homework. If needed you can always give feedback for
-                        the professors.
-                    </p>
-                </div>
-
-            </div>
-
-            <a
-                href="{% url 'generated_assignment' %}"
-                class="generate-button"
-            >
-                Generate Assignment →
-            </a>
+            {% endif %}
 
         </section>
 
     </main>
 
-
-    <footer class="home-footer">
-        <span>ReSolved © 2026</span>
-        <span>Adaptive AI Learning Platform</span>
-    </footer>
-
 </div>
 
+{% endblock %}
+
+
+{% block page_scripts %}
 
 <script>
-    const menuButton = document.getElementById("mobile-menu-button");
-    const mobileNav = document.getElementById("mobile-nav");
+    document.querySelectorAll(".course-toggle").forEach((button) => {
 
-    menuButton.addEventListener("click", () => {
-        mobileNav.classList.toggle("open");
+        button.addEventListener("click", () => {
 
-        const isOpen = mobileNav.classList.contains("open");
+            const courseId = button.dataset.course;
+            const panel = document.getElementById(`course-${courseId}`);
 
-        menuButton.setAttribute("aria-expanded", isOpen);
+            if (!panel) {
+                return;
+            }
+
+            panel.classList.toggle("open");
+
+            const isOpen = panel.classList.contains("open");
+
+            button.setAttribute("aria-expanded", isOpen);
+        });
+
     });
 </script>
 

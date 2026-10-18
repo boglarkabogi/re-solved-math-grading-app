@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Assignment, Evaluation, Submission, OcrAttempt
+from .models import Assignment, Evaluation, OcrAttempt, Submission
 
 
 class OcrAttemptInline(admin.TabularInline):
