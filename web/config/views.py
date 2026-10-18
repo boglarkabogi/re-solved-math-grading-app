@@ -14,6 +14,7 @@ from recognition.service import recognise_solution
 from bank.models import TaskBank, Topic
 from courses.models import Class, Group, Member
 from submissions.models import Assignment, OcrAttempt, Submission
+from submissions.services import run_grading
 
 logger = logging.getLogger(__name__)
 
@@ -628,8 +629,15 @@ def _start_evaluation(request, submission, ocr_attempt):
         len(submission.student_note),
     )
  
-    # TODO (next step): call motor.grading.grade() and save an Evaluation.
- 
+    evaluation_result = run_grading(submission, ocr_attempt)
+
+    if evaluation_result is None or evaluation_result.score is None:
+        messages.error(
+            request,
+            "The evaluation failed. Your teacher has been notified and will grade it by hand.",
+        )
+    else:
+        messages.success(request, "Your solution has been evaluated.")
  
 def _save_feedback(request, submission):
     """Store what the student wants the teacher to look at."""

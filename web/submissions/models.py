@@ -94,7 +94,9 @@ class Evaluation(models.Model):
     score = models.DecimalField("modell pontja", max_digits=3, decimal_places=2, null=True)
     reasoning = models.TextField("indoklás", blank=True)
     confidence = models.PositiveSmallIntegerField("magabiztosság", null=True, blank=True)
-    ocr_error_suspected = models.BooleanField(default=False)
+    ocr_error_suspected = models.BooleanField("OCR-hiba gyanúja", default=False)
+    ocr_error_reason = models.TextField("az OCR-hiba gyanújának indoka", blank=True)
+    student_final_answer = models.CharField("a diák végeredménye", max_length=255, blank=True)
     raw_response = models.TextField("a modell nyers válasza", blank=True)
     prompt = models.TextField("az elküldött prompt", blank=True)
 

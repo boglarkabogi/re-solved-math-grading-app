@@ -1,53 +1,15 @@
 """Tests for the evaluation step: ownership, comment saving, guards."""
 
 import pytest
-from django.contrib.auth import get_user_model
 from django.urls import reverse
 
-from bank.models import TaskBank, Topic
-from courses.models import Class, Course, Group, Member
-from submissions.models import Assignment, Evaluation, OcrAttempt, Submission
-
-
-def make_student(email):
-    return get_user_model().objects.create_user(username=email.split("@")[0], email=email, password="x")
-
-
-@pytest.fixture
-def world(db):
-    topic = Topic.objects.create(code="lnko", name="LNKO")
-    task = TaskBank.objects.create(
-        topic=topic, code="lnko-1", task_text="Mennyi lnko(12, 18)?", correct_solution="6"
-    )
-    course = Course.objects.create(name="Dimat I.", term="2026/27/1")
-    group = Group.objects.create(course=course, name="1. csoport", invite_code="ABC123")
-    lesson = Class.objects.create(group=group, name="LNKO")
-
-    student = make_student("s@example.com")
-    Member.objects.create(user=student, group=group)
-
-    assignment = Assignment.objects.create(student=student, task=task, session=lesson)
-    submission = Submission.objects.create(assignment=assignment, state=Submission.State.OCR_DONE)
-    OcrAttempt.objects.create(submission=submission, ocr_text="12 = 2*6, 18 = 3*6, lnko = 6", ocr_run_count=1)
-    return {
-        "student": student,
-        "group": group,
-        "lesson": lesson,
-        "submission": submission,
-        "task": task,
-    }
-
-
-def url_for(world):
-    return reverse(
-        "evaluation",
-        kwargs={"group_id": world["group"].id, "lesson_id": world["lesson"].id},
-    )
+from courses.models import Member
+from submissions.models import Evaluation, Submission
 
 
 @pytest.mark.django_db
 def test_page_requires_login(client, world):
-    assert client.get(url_for(world)).status_code in (302, 403)
+    assert client.get(world["url"]).status_code in (302, 403)
 
 
 @pytest.mark.django_db
@@ -55,7 +17,7 @@ def test_the_view_hands_the_task_and_the_recognised_text_to_the_template(client,
     """We assert on the context, not on the markup: the template may change."""
     client.force_login(world["student"])
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     assert answer.status_code == 200
     assert answer.context["assignment"].task.task_text == "Mennyi lnko(12, 18)?"
@@ -65,11 +27,11 @@ def test_the_view_hands_the_task_and_the_recognised_text_to_the_template(client,
 
 
 @pytest.mark.django_db
-def test_posting_saves_the_student_note(client, world):
+def test_posting_saves_the_student_note(client, world, calls):
     client.force_login(world["student"])
 
     answer = client.post(
-        url_for(world),
+        world["url"],
         {"student_note": "a 3. sorban 144 van, nem 134"},
     )
 
@@ -79,33 +41,33 @@ def test_posting_saves_the_student_note(client, world):
 
 
 @pytest.mark.django_db
-def test_the_saved_note_is_handed_back_to_the_template(client, world):
+def test_the_saved_note_is_handed_back_to_the_template(client, world, calls):
     client.force_login(world["student"])
-    client.post(url_for(world), {"student_note": "  elgépelés a 2. sorban  "})
+    client.post(world["url"], {"student_note": "  elgépelés a 2. sorban  "})
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     # whitespace is trimmed on save
     assert answer.context["submission"].student_note == "elgépelés a 2. sorban"
 
 
 @pytest.mark.django_db
-def test_another_students_submission_is_not_reachable(client, world):
+def test_another_students_submission_is_not_reachable(client, world, make_student):
     intruder = make_student("intruder@example.com")
     Member.objects.create(user=intruder, group=world["group"])
     client.force_login(intruder)
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     assert answer.status_code == 404
 
 
 @pytest.mark.django_db
-def test_a_non_member_is_sent_home(client, world):
+def test_a_non_member_is_sent_home(client, world, make_student):
     outsider = make_student("outsider@example.com")
     client.force_login(outsider)
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     assert answer.status_code == 302
     assert answer.url == reverse("home")
@@ -116,7 +78,7 @@ def test_without_recognised_text_it_sends_back_to_recognition(client, world):
     world["submission"].ocr_attempts.update(ocr_text="")
     client.force_login(world["student"])
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     assert answer.status_code == 302
     assert "recognition" in answer.url
@@ -132,7 +94,7 @@ def test_an_existing_evaluation_is_shown(client, world):
     )
     client.force_login(world["student"])
 
-    answer = client.get(url_for(world))
+    answer = client.get(world["url"])
 
     result = answer.context["evaluation"]
     assert float(result.score) == 0.75
@@ -140,12 +102,85 @@ def test_an_existing_evaluation_is_shown(client, world):
 
 
 @pytest.mark.django_db
-def test_a_post_without_the_field_keeps_the_earlier_note(client, world):
+def test_a_post_without_the_field_keeps_the_earlier_note(client, world, calls):
     """The evaluation page can restart grading without showing the comment box."""
     client.force_login(world["student"])
-    client.post(url_for(world), {"student_note": "fontos megjegyzés"})
+    client.post(world["url"], {"student_note": "fontos megjegyzés"})
 
-    client.post(url_for(world), {})  # no student_note field at all
+    client.post(world["url"], {})  # no student_note field at all
 
     world["submission"].refresh_from_db()
     assert world["submission"].student_note == "fontos megjegyzés"
+
+
+# --- feedback to the teacher ------------------------------------------------
+
+
+@pytest.fixture
+def graded(world):
+    """A submission that already has a finished evaluation."""
+    world["submission"].state = Submission.State.GRADED
+    world["submission"].save(update_fields=["state"])
+    world["evaluation"] = Evaluation.objects.create(
+        submission=world["submission"],
+        model_name="teszt/modell",
+        score="0.75",
+        reasoning="Jó módszer, apró hiba.",
+    )
+    return world
+
+
+@pytest.mark.django_db
+def test_feedback_is_saved_and_flags_the_submission_for_review(client, graded):
+    client.force_login(graded["student"])
+
+    client.post(graded["url"], {"student_feedback": "  a 2. sorban 7 van, nem 1  "})
+
+    graded["evaluation"].refresh_from_db()
+    graded["submission"].refresh_from_db()
+    assert graded["evaluation"].student_feedback == "a 2. sorban 7 van, nem 1"
+    assert graded["evaluation"].student_feedback_at is not None
+    assert graded["submission"].needs_review is True
+
+
+@pytest.mark.django_db
+def test_feedback_without_an_evaluation_changes_nothing(client, world):
+    client.force_login(world["student"])
+
+    client.post(world["url"], {"student_feedback": "nincs mire"})
+
+    world["submission"].refresh_from_db()
+    assert world["submission"].needs_review is False
+
+
+@pytest.mark.django_db
+def test_a_graded_submission_cannot_be_evaluated_again(client, graded, calls):
+    client.force_login(graded["student"])
+
+    answer = client.post(graded["url"], {}, follow=True)
+
+    messages = [str(m) for m in answer.context["messages"]]
+    assert "This submission has already been evaluated." in messages
+
+
+@pytest.mark.django_db
+def test_a_failed_submission_may_be_retried(client, world, calls):
+    world["submission"].state = Submission.State.FAILED
+    world["submission"].save(update_fields=["state"])
+    client.force_login(world["student"])
+
+    answer = client.post(world["url"], {}, follow=True)
+
+    messages = [str(m) for m in answer.context["messages"]]
+    assert "already been evaluated" not in " ".join(messages)
+
+
+@pytest.mark.django_db
+def test_sending_feedback_does_not_touch_the_score(client, graded):
+    client.force_login(graded["student"])
+
+    client.post(graded["url"], {"student_feedback": "nem értek egyet"})
+
+    graded["evaluation"].refresh_from_db()
+    assert float(graded["evaluation"].score) == 0.75
+    assert graded["evaluation"].teacher_score is None
