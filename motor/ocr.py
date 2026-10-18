@@ -2,6 +2,7 @@
 
 import base64
 import io
+import logging
 
 from . import llm
 from .config import settings
@@ -13,6 +14,8 @@ try:
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
+
+logger = logging.getLogger(__name__)
 
 MAX_IMAGE_SIDE = 2000
 
@@ -59,8 +62,9 @@ def pic_to_data_url(pic_bytes: bytes):
                 img.convert("RGB").save(buf, format="JPEG", quality=90)
                 encoded = base64.b64encode(buf.getvalue()).decode("utf-8")
                 return f"data:image/jpeg;base64,{encoded}"
-        except Exception as e:
-            print(f"      (képátalakítás kihagyva: {e})")
+        except Exception:
+             logger.warning("Could not prepare the image, sending it unchanged", exc_info=True)
+            
 
     # Tartalék Pillow nélkül: a formátumot a fájl első bájtjaiból ismerjük fel
     if pic_bytes.startswith(b"\x89PNG"):

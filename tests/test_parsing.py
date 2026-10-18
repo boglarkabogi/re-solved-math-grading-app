@@ -108,49 +108,47 @@ def test_unparsable_response_gives_none(broken):
 
 
 @pytest.mark.parametrize(
-    ("given", "expected"),
+    ("given", "expected", "changed"),
     [
-        (1, 1),
-        (0, 0),
-        (0.75, 0.75),
-        (0.6, 0.5),  # nearest allowed value
-        (0.7, 0.75),
-        (0.9, 1),
-        (0.1, 0),
-        (5, 1),  # out of range -> nearest end of the scale
-        (-2, 0),
-        ("0.75", 0.75),  # a number arriving as text also works
-        ("1", 1),
+        (1, 1, False),
+        (0, 0, False),
+        (0.75, 0.75, False),
+        (0.6, 0.5, True),  # nearest allowed value
+        (0.7, 0.75, True),
+        (0.9, 1, True),
+        (0.1, 0, True),
+        ("0.75", 0.75, False),  # a number arriving as text also works
+        ("1", 1, False),
     ],
 )
-def test_score_is_rounded_to_the_scale(given, expected):
+def test_score_is_moved_to_the_scale(given, expected, changed):
     result = {"pont": given}
 
-    normalize_score(result)
+    assert normalize_score(result) is changed
 
     assert result["pont"] == expected
 
 
-@pytest.mark.parametrize("broken", [None, "nem szám", [1], {}])
-def test_invalid_score_is_left_unchanged(broken):
-    result = {"pont": broken}
+@pytest.mark.parametrize("given", [5, -2, 1.5, 100])
+def test_a_score_outside_the_scale_is_refused(given):
+    """Pulling 5 onto the nearest allowed value would hand out full marks."""
+    result = {"pont": given}
 
-    normalize_score(result)
-
-    assert result["pont"] == broken
-
-
-def test_missing_score_does_not_raise():
-    result = {"indoklas": "nincs pont mező"}
-
-    normalize_score(result)
-
-    assert "pont" not in result
+    assert normalize_score(result) is True
+    assert result["pont"] is None
+    assert "hiba" in result
 
 
-def test_it_modifies_in_place_and_returns_none():
-    # reminder: do NOT use it like this:  result["pont"] = normalize_score(...)
+@pytest.mark.parametrize("result", [{}, {"pont": None}, {"pont": "nem szám"}])
+def test_a_missing_or_unusable_score_is_left_alone(result):
+    assert normalize_score(result) is False
+
+
+def test_it_modifies_in_place_and_reports_whether_it_had_to():
+    # it still edits the dict; the return value is only the flag
     result = {"pont": 0.6, "indoklas": "x"}
 
-    assert normalize_score(result) is None
+    changed = normalize_score(result)
+
+    assert changed is True
     assert result == {"pont": 0.5, "indoklas": "x"}

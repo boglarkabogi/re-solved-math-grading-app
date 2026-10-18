@@ -6,10 +6,11 @@ Példa:
 
 import argparse
 import json
+import logging
 import sys
 from pathlib import Path
 
-from motor.grading import ertekel
+from motor.grading import grade
 
 
 def main(argv=None):
@@ -18,9 +19,11 @@ def main(argv=None):
     p.add_argument("--helyes", required=True, help="a helyes megoldás / végeredmény")
     p.add_argument("--megoldas", help="a diák megoldása szövegként")
     p.add_argument("--megoldas-fajl", help="vagy fájlból")
-    p.add_argument("--temakor")
+    p.add_argument("--megjegyzes", help="a diák megjegyzése a felismerési hibáról")
     p.add_argument("--modell")
     args = p.parse_args(argv)
+
+    logging.basicConfig(level=logging.INFO, format="%(levelname)s %(name)s: %(message)s")
 
     if args.megoldas_fajl:
         megoldas = Path(args.megoldas_fajl).read_text(encoding="utf-8")
@@ -29,8 +32,8 @@ def main(argv=None):
     else:
         megoldas = sys.stdin.read()
 
-    eredmeny = ertekel(args.feladat, args.helyes, megoldas, temakor=args.temakor, modell=args.modell)
-    print(json.dumps(eredmeny, ensure_ascii=False, indent=2))
+    result = grade(args.feladat, args.helyes, megoldas, diak_megjegyzes=args.megjegyzes, modell=args.modell)
+    print(json.dumps(result, ensure_ascii=False, indent=2))
 
 
 if __name__ == "__main__":

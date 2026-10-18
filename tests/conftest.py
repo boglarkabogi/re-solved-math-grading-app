@@ -79,6 +79,7 @@ def answer(**overrides):
         "ertelmezheto": True,
         "ocr_hiba_gyanu": False,
         "ocr_hiba_indok": "",
+        "pont_kerekitve": False,
         "nyers_valasz": '{"pont": 0.75}',
         "prompt": "SYSTEM\n\n---\n\nUSER",
         "modell": "teszt/modell",

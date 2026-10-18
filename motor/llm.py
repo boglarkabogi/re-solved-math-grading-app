@@ -1,11 +1,14 @@
 """OpenAI-kompatibilis kliens sebességkorláttal és újrapróbálkozással."""
 
+import logging
 import random
 import threading
 import time
 from functools import lru_cache
 
 from .config import settings
+
+logger = logging.getLogger(__name__)
 
 FATAL_ERRORS = {400, 401, 403, 404, 410, 422}
 MAX_WAIT = 120
@@ -69,7 +72,7 @@ def chat(messages, modell=None, reasoning_fallback=True, json_mode=False, **kwar
             status = getattr(error, "status_code", None)
 
             if status == 400 and json_mode:
-                print("      JSON-mód nem támogatott, újra sima szöveggel...")
+                logger.info("JSON mode is not supported by %s, retrying as plain text", modell)
                 json_mode = False
                 continue
 
@@ -81,9 +84,12 @@ def chat(messages, modell=None, reasoning_fallback=True, json_mode=False, **kwar
 
             if i < tries - 1:  # az utolsó sikertelen próba után már nem várunk
                 wait = waiting(error, i)
-                print(
-                    f"      Hiba ({status or type(error).__name__}), "
-                    f"{i + 1}. próba. Várakozás {wait:.0f} mp..."
+                logger.warning(
+                    "Model call failed (%s), attempt %s of %s, waiting %.0f s",
+                    status or type(error).__name__,
+                    i + 1,
+                    tries,
+                    wait,
                 )
                 time.sleep(wait)
             continue

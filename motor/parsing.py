@@ -59,9 +59,25 @@ def extract_json(text):
 
 
 def normalize_score(result: dict):
-    """A `pont`-ot a legközelebbi megengedett értékre kerekíti (0, 0.25, 0.5, 0.75, 1)."""
+    """A `pont`-ot a legközelebbi megengedett értékre igazítja (0, 0.25, 0.5, 0.75, 1).
+
+    Visszaadja, hogy hozzá kellett-e nyúlni. A hívó ebből tudja, hogy a modell
+    nem tartotta be a saját pontskáláját, és érdemes emberi szemmel ránézni.
+
+    A 0..1 tartományon kívüli érték nem kerekítendő, hanem értelmezhetetlen:
+    a legközelebbi megengedett értékre húzva a 7-ből teljes pont lenne, a -3-ból
+    nulla. Ilyenkor a pont None lesz, és a `hiba` mező írja le, mi történt.
+    """
     try:
         score = float(result["pont"])
     except (KeyError, TypeError, ValueError):
-        return
-    result["pont"] = min(PONTOK, key=lambda v: abs(v - score))
+        return False
+    
+    if not 0 <= score <= 1:
+        result["pont"] = None
+        result["hiba"] = f"A modell a skálán kívüli pontot adott: {score!r}"
+        return True
+
+    nearest = min(PONTOK, key=lambda allowed: abs(allowed - score))
+    result["pont"] = nearest
+    return nearest != score

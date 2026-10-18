@@ -135,8 +135,13 @@ def test_a_suspected_recognition_error_asks_for_a_teacher(client, world, calls, 
 
 
 @pytest.mark.django_db
-def test_a_score_outside_the_range_is_refused(client, world, calls, build_answer):
-    calls["answer"]["value"] = build_answer(pont=7)
+def test_a_score_the_engine_refused_fails_the_submission(client, world, calls, build_answer):
+    """motor.parsing turns an out-of-scale score into None rather than into 1."""
+    calls["answer"]["value"] = build_answer(
+        pont=None,
+        pont_kerekitve=True,
+        hiba="A modell a skálán kívüli pontot adott: 7.0",
+    )
     client.force_login(world["student"])
 
     client.post(world["url"])
@@ -145,6 +150,7 @@ def test_a_score_outside_the_range_is_refused(client, world, calls, build_answer
     assert evaluation.score is None
     world["submission"].refresh_from_db()
     assert world["submission"].state == Submission.State.FAILED
+    assert world["submission"].needs_review is True
 
 
 @pytest.mark.django_db
@@ -200,9 +206,9 @@ def test_an_unreadable_text_is_flagged_even_without_the_ocr_field(client, world,
 
 
 @pytest.mark.django_db
-def test_a_score_off_the_scale_is_snapped_and_flagged(client, world, calls, build_answer):
-    """The prompt allows five scores. 0.8 means the model ignored it."""
-    calls["answer"]["value"] = build_answer(pont=0.8)
+def test_a_snapped_score_is_kept_but_flagged(client, world, calls, build_answer):
+    """The engine moved 0.8 onto 0.75 and said so. The student is not blocked."""
+    calls["answer"]["value"] = build_answer(pont=0.75, pont_kerekitve=True)
     client.force_login(world["student"])
 
     client.post(world["url"])
@@ -223,7 +229,7 @@ def test_every_allowed_score_is_kept_as_it_is(client, world, calls, build_answer
         world["submission"].needs_review = False
         world["submission"].save(update_fields=["state", "needs_review"])
 
-        calls["answer"]["value"] = build_answer(pont=given)
+        calls["answer"]["value"] = build_answer(pont=given, pont_kerekitve=False)
         client.force_login(world["student"])
         client.post(world["url"])
 

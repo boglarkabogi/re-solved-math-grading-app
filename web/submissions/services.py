@@ -26,13 +26,11 @@ RESULT_KEYS = {
     "ocr_error_reason": "ocr_hiba_indok",
     "interpretable": "ertelmezheto",
     "student_final_answer": "diak_vegeredmenye",
+    "score_was_snapped": "pont_kerekitve",
     "raw_response": "nyers_valasz",
     "prompt": "prompt",
     "model_name": "modell",
 }
-
-# The system prompt allows these five scores and nothing else.
-ALLOWED_SCORES = (Decimal("0"), Decimal("0.25"), Decimal("0.5"), Decimal("0.75"), Decimal("1"))
 
 def run_grading(submission, ocr_attempt):
     """Grade one submission and return the stored Evaluation.
@@ -80,7 +78,8 @@ def _field(result, name):
     return result.get(key)
 
 def _store(submission, result):
-    score, score_was_snapped = _as_score(_field(result, "score"))
+    score = _as_score(_field(result, "score"))
+    score_was_snapped = bool(_field(result, "score_was_snapped"))
     ocr_error_suspected = bool(_field(result, "ocr_error_suspected"))
     interpretable = _field(result, "interpretable")
     unreadable = interpretable is False
@@ -122,32 +121,23 @@ def _store(submission, result):
 
 
 def _as_score(value):
-    """Turn the model's score into one of the five allowed values.
+    """Turn the engine's score into a Decimal, or None.
  
-    Returns (score, was_snapped). A score the prompt does not allow but that
-    still sits inside 0..1 is moved to the nearest allowed value and flagged,
-    so the student is not blocked but the teacher is told. Anything else is
-    None, which fails the submission.
+    The scoring scale is the engine's business, not ours: motor.parsing has
+    already moved the score onto one of the five allowed values, or set it to
+    None when the model answered outside 0..1. Here we only convert, so the
+    rule lives in exactly one place.
     """
     if value is None or value == "":
-        return None, False
+        return None
 
     try:
         score = Decimal(str(value))
     except (InvalidOperation, ValueError):
         logger.warning("The model returned an unusable score: %r", value)
-        return None, False
+        return None
 
-    if score < 0 or score > 1:
-        logger.warning("The model returned a score outside 0..1: %r", value)
-        return None, False
-    
-    if score in ALLOWED_SCORES:
-        return score.quantize(Decimal("0.01")), False
-
-    nearest = min(ALLOWED_SCORES, key=lambda allowed: abs(allowed - score))
-    logger.warning("The model broke the scoring scale: %r, stored as %s", value, nearest)
-    return nearest.quantize(Decimal("0.01")), True
+    return score.quantize(Decimal("0.01"))
 
 
 def _as_confidence(value):

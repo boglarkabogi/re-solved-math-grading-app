@@ -27,9 +27,9 @@ def grade(feladat, helyes_megoldas, megoldas_szoveg, diak_megjegyzes=None, model
         if result is not None:
             break
     if result is None:
-        result = {"pont": None, "hiba": "A modell nem adott értelmezhető JSON választ."}
+        result = {"pont": None, "hiba": "A modell nem adott értelmezhető JSON választ.", "pont_kerekitve": False}
     else:
-        normalize_score(result)
+        result["pont_kerekitve"] = normalize_score(result)
     result["nyers_valasz"] = raw
     result["prompt"] = SYSTEM_PROMPT + "\n\n---\n\n" + user
     result["modell"] = modell
