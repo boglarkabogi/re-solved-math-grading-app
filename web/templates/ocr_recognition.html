@@ -370,6 +370,12 @@
 
         <!-- COMMENT -->
 
+        <form
+            method="post"
+            action="{% url 'evaluation' group.id lesson.id %}"
+            class="evaluation-form">   
+        {% csrf_token %}
+
         <section class="ocr-comment-card">
 
             <div class="ocr-comment-heading">
@@ -389,14 +395,13 @@
             <p>
                 In case there are some minimal differences between
                 the handwritten solution and the recognised text,
-                write the correction here.
+                write the correction here.  
             </p>
 
 
             <textarea
                 name="student_note"
-                placeholder="E.g. 'In the second line it is a 7 not a 1...'"
-            ></textarea>
+                placeholder="E.g. 'In the second line it is a 7 not a 1...'">{{ submission.student_note }}</textarea>
 
         </section>
 
@@ -426,20 +431,20 @@
 
             </div>
 
-
             {% if ocr_attempt.ocr_text %}
-
-                <a
-                    href="{% url 'evaluation' %}?attempt={{ attempt }}"
+                <button
+                    type="submit"
                     class="evaluation-button"
                 >
                     Get your evaluation
                     <span>→</span>
-                </a>
+                </button>
 
             {% endif %}
 
         </section>
+
+        </form>
 
     </main>
 

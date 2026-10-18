@@ -23,7 +23,7 @@
 
         <nav class="evaluation-desktop-nav">
             <a href="{% url 'home' %}">Home</a>
-            <a href="/beadas/">Assignments</a>
+            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
         </nav>
 
         <div class="evaluation-header-actions">
@@ -42,7 +42,7 @@
 
         <nav class="evaluation-mobile-nav" id="evaluation-mobile-nav">
             <a href="{% url 'home' %}">Home</a>
-            <a href="/beadas/">Assignments</a>
+            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
         </nav>
 
     </header>
@@ -52,8 +52,8 @@
 
         <!-- TOPIC -->
         <section class="evaluation-topic">
-            <h1>Topic: Linear Congruence</h1>
-            <p>1. Lesson · Due to: 2026.09.20</p>
+            <h1>Topic: {{ lesson.name }}</h1>
+            <p>{{ lesson_number }}. Lesson</p>
         </section>
 
 
@@ -136,9 +136,11 @@
 
                 <div class="evaluation-image-container">
 
-                    <div class="evaluation-image-placeholder">
-                        Uploaded solution preview
-                    </div>
+                    {% if ocr_attempt.image %}
+                        <img src="{{ ocr_attempt.image.url }}" alt="Uploaded handwritten solution">
+                    {% else %}
+                        <div class="evaluation-image-placeholder">No uploaded image available.</div>
+                    {% endif %}
 
                 </div>
 
@@ -154,7 +156,7 @@
 
                         <h2>Your recognised text</h2>
 
-                        <span>Recognition: {{ attempt }}/3</span>
+                        <span>Recognition: {{ ocr_attempt.ocr_run_count }}/3</span>
 
                     </div>
 
@@ -164,34 +166,19 @@
                         upload a clearer image and try again.
                     </p>
 
-                    <div class="evaluation-recognised-text">
+                    <div class="evaluation-recognised-text">{{ ocr_attempt.ocr_text }}</div>
 
-                        <div
-                            class="evaluation-math"
-                            data-expression="\text{Számoljuk ki: } 19x \equiv 16 \pmod{470}"
-                        ></div>
-
-                        <div
-                            class="evaluation-math"
-                            data-expression="16x \equiv 5 \pmod{202}"
-                        ></div>
-
-                        <p>
-                            A lineáris kongruenciák megoldásához meghatározzuk
-                            a megfelelő legnagyobb közös osztót.
-                        </p>
-
-                    </div>
-
+                    {% if evaluation.confidence is not None %}
                     <div class="evaluation-confidence-row">
-
+                        <span>Model confidence</span>
                         <div class="evaluation-confidence-line">
                             <div class="evaluation-confidence-fill"></div>
                         </div>
 
-                        <span>100%</span>
+                        <span>{{ evaluation.confidence }}%</span>
 
                     </div>
+                    {% endif %}
 
                 </section>
 
@@ -201,6 +188,7 @@
 
 
         <!-- RESULT AREA -->
+        {% if evaluation %}
         <section class="evaluation-results-grid">
 
             <!-- SCORE -->
@@ -223,7 +211,7 @@
                     <span class="evaluation-score-label">Score</span>
 
                     <div class="evaluation-score">
-                        1.75<span>/2</span>
+                        {{ evaluation.final_score }}<span>/1</span>
                     </div>
 
                     <div class="evaluation-score-bar">
@@ -248,12 +236,7 @@
                 </div>
 
                 <div class="evaluation-reasoning-box">
-                    <p>
-                        The final result is correct and the overall method is
-                        mostly right. There is a small error in the second step
-                        when simplifying the congruence, but it does not affect
-                        the final answer significantly.
-                    </p>
+                    <p>{{ evaluation.reasoning }}</p>
                 </div>
 
             </article>
@@ -277,14 +260,54 @@
                     </div>
                 </div>
 
-                <textarea
-                    class="evaluation-feedback-input"
-                    placeholder="E.g. 'In the second line it is a 7 not a 1...'"
-                ></textarea>
+                <form method="post" class="evaluation-feedback-form">
+
+                    {% csrf_token %}
+
+                    <textarea
+                        class="evaluation-feedback-input"
+                        name="student_feedback"
+                        placeholder="E.g. 'In the second line it is a 7 not a 1...'"
+                    >{{ evaluation.student_feedback }}</textarea>
+
+                    <button type="submit" class="evaluation-retry-button">
+                        Send to teacher →
+                    </button>
+
+                </form>
+
+                {% if evaluation.student_feedback_at %}
+                    <p class="evaluation-feedback-sent">
+                        Sent on {{ evaluation.student_feedback_at|date:"Y.m.d. H:i" }}.
+                    </p>
+                {% endif %}
 
             </article>
 
         </section>
+
+        {% else %}
+
+        <section class="evaluation-retry-card">
+
+            <div class="evaluation-retry-content">
+                <div class="evaluation-retry-icon">⏳</div>
+                <div>
+                    <h3>Not evaluated yet</h3>
+                    <p>Start the evaluation of the recognised text above.</p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="evaluation-retry-button">
+                    Get your evaluation →
+                </button>
+            </form>
+
+        </section>
+
+        {% endif %}
 
     </main>
 

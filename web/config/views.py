@@ -8,6 +8,7 @@ from django.core.exceptions import ValidationError
 from django.db import transaction
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
+from django.utils import timezone
 from recognition.service import recognise_solution
 
 from bank.models import TaskBank, Topic
@@ -529,20 +530,131 @@ def ocr_recognition(request, group_id, lesson_id):
         },
     )
 
-
 @login_required
-def evaluation(request):
-    attempt = int(request.GET.get("attempt", 1))
-    attempt = max(1, min(attempt, 3))
-
+def evaluation(request, group_id, lesson_id):
+    """The evaluation step of the submission flow.
+ 
+    GET  = show the result
+    POST = either start the evaluation, or send feedback to the teacher about
+           an evaluation that already happened. A successful evaluation is
+           final: the student cannot run it again.
+    """
+    lesson = get_object_or_404(
+        Class.objects.select_related("group__course"),
+        id=lesson_id,
+        group_id=group_id,
+    )
+ 
+    membership = Member.objects.filter(
+        user=request.user,
+        group=lesson.group,
+    ).first()
+ 
+    if membership is None:
+        messages.error(request, "You are not a member of this course.")
+        return redirect("home")
+ 
+    assignment = get_object_or_404(
+        Assignment.objects.select_related("task", "task__topic"),
+        student=request.user,
+        session=lesson,
+        mode=Assignment.Mode.CLASS,
+    )
+ 
+    submission = get_object_or_404(Submission, assignment=assignment)
+ 
+    ocr_attempt = submission.ocr_attempts.order_by("-created_at").first()
+ 
+    # Without recognised text there is nothing to evaluate.
+    if ocr_attempt is None or not ocr_attempt.ocr_text:
+        messages.error(request, "Run the recognition before asking for an evaluation.")
+        return redirect(
+            "ocr_recognition",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+ 
+    if request.method == "POST":
+        # Two different forms post here: the feedback box carries
+        # "student_feedback", anything else means "start the evaluation".
+        if "student_feedback" in request.POST:
+            _save_feedback(request, submission)
+        else:
+            _start_evaluation(request, submission, ocr_attempt)
+ 
+        return redirect(
+            "evaluation",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+ 
+    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
+ 
     return render(
         request,
         "evaluation.html",
         {
-            "attempt": attempt,
+            "lesson": lesson,
+            "lesson_number": lesson_ids.index(lesson.id) + 1,
+            "group": lesson.group,
+            "course": lesson.group.course,
+            "assignment": assignment,
+            "submission": submission,
+            "ocr_attempt": ocr_attempt,
+            "evaluation": submission.evaluations.first(),
         },
     )
-
+ 
+ 
+def _start_evaluation(request, submission, ocr_attempt):
+    """Run the grading engine, unless this submission is already graded."""
+    if submission.state == Submission.State.GRADED:
+        # A finished evaluation is final. Re-running it would let a student
+        # keep trying until a better score comes out.
+        messages.error(request, "This submission has already been evaluated.")
+        return
+ 
+    # The comment about the recognised text arrives from the recognition page
+    # and is an input to grade(). Other buttons post without the field, and
+    # then we keep what the student wrote earlier.
+    if "student_note" in request.POST:
+        submission.student_note = request.POST.get("student_note", "").strip()
+        submission.save(update_fields=["student_note"])
+ 
+    logger.info(
+        "Evaluation requested: user=%s submission=%s note_length=%s",
+        request.user.id,
+        submission.id,
+        len(submission.student_note),
+    )
+ 
+    # TODO (next step): call motor.grading.grade() and save an Evaluation.
+ 
+ 
+def _save_feedback(request, submission):
+    """Store what the student wants the teacher to look at."""
+    evaluation_result = submission.evaluations.first()
+ 
+    if evaluation_result is None:
+        messages.error(request, "There is no evaluation to give feedback on yet.")
+        return
+ 
+    evaluation_result.student_feedback = request.POST.get("student_feedback", "").strip()
+    evaluation_result.student_feedback_at = timezone.now()
+    evaluation_result.save(update_fields=["student_feedback", "student_feedback_at"])
+ 
+    # This is what puts the submission on the teacher's review list.
+    submission.needs_review = True
+    submission.save(update_fields=["needs_review"])
+ 
+    logger.info(
+        "Student feedback saved: user=%s submission=%s evaluation=%s",
+        request.user.id,
+        submission.id,
+        evaluation_result.id,
+    )
+ 
+    messages.success(request, "Your feedback was sent to the teacher.")
 
 @login_required
 def course_detail(request, group_id):

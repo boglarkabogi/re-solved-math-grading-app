@@ -1,0 +1,64 @@
+@font-face {
+    font-family: "BBH Bartle";
+    src: url("../fonts/BBHBartle-Regular.5e32969b8964.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "42dot Sans";
+    src: url("../fonts/42dotSans-Light.ac9576af3de8.ttf") format("truetype");
+    font-weight: 300;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "42dot Sans";
+    src: url("../fonts/42dotSans-Regular.57a17283ccfc.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "42dot Sans";
+    src: url("../fonts/42dotSans-Medium.f7dc9145970e.ttf") format("truetype");
+    font-weight: 500;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "42dot Sans";
+    src: url("../fonts/42dotSans-Bold.93c605e7bca9.ttf") format("truetype");
+    font-weight: 700;
+    font-style: normal;
+}
+
+@font-face {
+    font-family: "BBH Bartle";
+    src: url("../fonts/BBHBartle-Regular.5e32969b8964.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    min-height: 100%;
+}
+
+body {
+    font-family: "42dot Sans", Arial, sans-serif;
+}
+
+.logo,
+.home-logo {
+    font-family: "BBH Bartle", sans-serif;
+}
+
+a {
+    color: inherit;
+}

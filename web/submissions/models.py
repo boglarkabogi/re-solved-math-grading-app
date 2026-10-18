@@ -89,7 +89,7 @@ class OcrAttempt(models.Model):
 
 
 class Evaluation(models.Model):
-    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="evaluantions")
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="evaluations")
     model_name = models.CharField("modell", max_length=120)
     score = models.DecimalField("modell pontja", max_digits=3, decimal_places=2, null=True)
     reasoning = models.TextField("indoklás", blank=True)
@@ -108,7 +108,8 @@ class Evaluation(models.Model):
         related_name="teacher_overrides",
     )
     teacher_scored_at = models.DateTimeField(null=True, blank=True)
-
+    student_feedback = models.TextField("a diák visszajelzése", blank=True)
+    student_feedback_at = models.DateTimeField(null=True, blank=True)
     moodle_synced_at = models.DateTimeField(null=True, blank=True)
     moodle_resend = models.BooleanField("újraküldendő a Moodle-be", default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -116,6 +117,7 @@ class Evaluation(models.Model):
     class Meta:
         verbose_name = "értékelés"
         verbose_name_plural = "értékelések"
+        ordering = ["-created_at"]
 
     def __str__(self):
         return f"{self.submission} – {self.final_score} pont"
