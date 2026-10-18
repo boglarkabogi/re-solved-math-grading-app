@@ -2,12 +2,14 @@
 
 import base64
 import io
+
 from . import llm
 from .config import settings
 from .parsing import strip_think_blocks
 
 try:
     from PIL import Image, ImageOps
+
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False

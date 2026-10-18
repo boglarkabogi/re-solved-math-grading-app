@@ -4,10 +4,27 @@ from django.contrib import admin
 from django.contrib.auth import views as auth_views
 from django.urls import include, path
 
-from .views import evaluation, generate_assignment, generated_assignment, home, ocr_recognition, register, course_detail, leave_course, lesson_detail
+from .views import (
+    course_detail,
+    evaluation,
+    generate_assignment,
+    generated_assignment,
+    home,
+    leave_course,
+    lesson_detail,
+    ocr_recognition,
+    register,
+)
 
 urlpatterns = [
-    path("",auth_views.LoginView.as_view(template_name="login.html", redirect_authenticated_user=True,), name="login"),
+    path(
+        "",
+        auth_views.LoginView.as_view(
+            template_name="login.html",
+            redirect_authenticated_user=True,
+        ),
+        name="login",
+    ),
     path("home/", home, name="home"),
     path("home/evaluation/", evaluation, name="evaluation"),
     path("register/", register, name="register"),
@@ -15,9 +32,19 @@ urlpatterns = [
     path("course/<int:group_id>/", course_detail, name="course_detail"),
     path("course/<int:group_id>/leave/", leave_course, name="leave_course"),
     path("course/<int:group_id>/lesson/<int:lesson_id>/", lesson_detail, name="lesson_detail"),
-    path("course/<int:group_id>/lesson/<int:lesson_id>/generate/", generate_assignment, name="generate_assignment"),
-    path("course/<int:group_id>/lesson/<int:lesson_id>/assignment/", generated_assignment, name="generated_assignment"),
-    path("course/<int:group_id>/lesson/<int:lesson_id>/recognition/", ocr_recognition, name="ocr_recognition"),
+    path(
+        "course/<int:group_id>/lesson/<int:lesson_id>/generate/",
+        generate_assignment,
+        name="generate_assignment",
+    ),
+    path(
+        "course/<int:group_id>/lesson/<int:lesson_id>/assignment/",
+        generated_assignment,
+        name="generated_assignment",
+    ),
+    path(
+        "course/<int:group_id>/lesson/<int:lesson_id>/recognition/", ocr_recognition, name="ocr_recognition"
+    ),
     path("admin/", admin.site.urls),
 ]
 

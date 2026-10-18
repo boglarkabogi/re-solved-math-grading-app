@@ -2,10 +2,12 @@ import time
 
 from django.contrib.admin.views.decorators import staff_member_required
 from django.shortcuts import render
+
 from bank.models import TaskBank
 from motor.grading import grade
-from .models import TrialRun, BenchmarkCase
+
 from .forms import TrialRunForm
+from .models import BenchmarkCase, TrialRun
 
 
 @staff_member_required
@@ -39,8 +41,8 @@ def _initial_from_task_bank(request):
         "correct_solution": task.correct_solution,
         "label": task.code,
     }
- 
- 
+
+
 def _run(request, data):
     started = time.monotonic()
     result, call_error = None, None
@@ -56,7 +58,7 @@ def _run(request, data):
         # On the developer page a failure is information, not a crash: show it.
         call_error = f"{type(error).__name__}: {error}"
     duration_ms = int((time.monotonic() - started) * 1000)
- 
+
     result = result or {}
     score = result.get("pont")
     run = TrialRun.objects.create(
@@ -72,7 +74,7 @@ def _run(request, data):
         confidence=result.get("magabiztossag"),
         duration_ms=duration_ms,
     )
- 
+
     expected = data.get("expected_score")
     benchmark_case = None
     if score is not None and data.get("save_as_benchmark_case"):
@@ -83,7 +85,7 @@ def _run(request, data):
             solution_text=data["solution_text"],
             expected_score=expected,
         )
- 
+
     return render(
         request,
         "devtools/_result.html",

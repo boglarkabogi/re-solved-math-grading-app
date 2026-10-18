@@ -5,7 +5,6 @@ import requests
 
 from .providers import get_ocr_model
 
-
 SYSTEM_PROMPT = """
 You are a mathematical handwriting transcription system.
 
@@ -35,20 +34,14 @@ def image_to_data_url(image_field):
     finally:
         image_field.close()
 
-    mime_type, _ = mimetypes.guess_type(
-        image_field.name
-    )
+    mime_type, _ = mimetypes.guess_type(image_field.name)
 
     if mime_type is None:
         mime_type = "image/jpeg"
 
-    encoded = base64.b64encode(
-        image_bytes
-    ).decode("utf-8")
+    encoded = base64.b64encode(image_bytes).decode("utf-8")
 
-    return (
-        f"data:{mime_type};base64,{encoded}"
-    )
+    return f"data:{mime_type};base64,{encoded}"
 
 
 def recognise_solution(
@@ -92,11 +85,7 @@ Do not include the task text in the transcription.
                     },
                     {
                         "type": "image_url",
-                        "image_url": {
-                            "url": image_to_data_url(
-                                image_field
-                            )
-                        },
+                        "image_url": {"url": image_to_data_url(image_field)},
                     },
                 ],
             },
@@ -104,16 +93,12 @@ Do not include the task text in the transcription.
     }
 
     if "reasoning_effort" in model:
-        payload["reasoning_effort"] = (
-            model["reasoning_effort"]
-        )
+        payload["reasoning_effort"] = model["reasoning_effort"]
 
     response = requests.post(
         model["url"],
         headers={
-            "Authorization": (
-                f"Bearer {model['key']}"
-            ),
+            "Authorization": (f"Bearer {model['key']}"),
             "Content-Type": "application/json",
         },
         json=payload,
@@ -124,15 +109,10 @@ Do not include the task text in the transcription.
 
     data = response.json()
 
-    content = (
-        data["choices"][0]["message"]
-        .get("content")
-    )
+    content = data["choices"][0]["message"].get("content")
 
     if not content:
-        raise RuntimeError(
-            "OCR model returned an empty response."
-        )
+        raise RuntimeError("OCR model returned an empty response.")
 
     return {
         "text": content.strip(),

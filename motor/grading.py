@@ -7,6 +7,7 @@ from .prompts import SYSTEM_PROMPT, user_message
 
 JSON_RETRY = 3
 
+
 def grade(feladat, helyes_megoldas, megoldas_szoveg, diak_megjegyzes=None, modell=None):
     """Visszaad egy szótárat: pont, indoklás, magabiztosság, nyers válasz, prompt.
     Ha a modell többszöri próbálkozásra sem ad értelmes JSON-t, a 'pont' None,
@@ -20,7 +21,7 @@ def grade(feladat, helyes_megoldas, megoldas_szoveg, diak_megjegyzes=None, model
         {"role": "user", "content": user},
     ]
     raw, result = None, None
-    for i in range(JSON_RETRY):
+    for _i in range(JSON_RETRY):
         raw = llm.chat(messages, modell, json_mode=True)
         result = extract_json(raw)
         if result is not None:

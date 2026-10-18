@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from .models import Course, PracticePermission, Group, Class, Member
+from .models import Class, Course, Group, Member, PracticePermission
 
 
 @admin.register(Course)

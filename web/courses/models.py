@@ -30,9 +30,7 @@ class Group(models.Model):
 
 
 class Member(models.Model):
-    user = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tagsagok"
-    )
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="tagsagok")
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="tagsagok")
     is_teacher = models.BooleanField("oktató a csoportban", default=False)
     joined_at = models.DateTimeField(auto_now_add=True)

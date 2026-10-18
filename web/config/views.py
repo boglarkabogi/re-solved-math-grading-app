@@ -1,22 +1,23 @@
+import logging
+
 from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from django.shortcuts import redirect, render, get_object_or_404
 from django.db import transaction
+from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
-
 from recognition.service import recognise_solution
-from courses.models import Group, Member, Class
-from submissions.models import Assignment, Submission, OcrAttempt
-from bank.models import Topic, TaskBank
 
-import logging
+from bank.models import TaskBank, Topic
+from courses.models import Class, Group, Member
+from submissions.models import Assignment, OcrAttempt, Submission
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
 
 def register(request):
     if request.user.is_authenticated:
@@ -64,10 +65,7 @@ def register(request):
                 role="diak",
             )
 
-            messages.success(
-                request,
-                "Registration successful. You can now log in."
-            )
+            messages.success(request, "Registration successful. You can now log in.")
 
             return redirect("login")
 
@@ -90,9 +88,7 @@ def home(request):
             return redirect("home")
 
         try:
-            group = Group.objects.select_related("course").get(
-                invite_code=invite_code
-            )
+            group = Group.objects.select_related("course").get(invite_code=invite_code)
         except Group.DoesNotExist:
             messages.error(request, "Invalid course code.")
             return redirect("home")
@@ -106,21 +102,14 @@ def home(request):
         )
 
         if not created:
-            messages.info(
-                request,
-                "You are already a member of this course."
-            )
+            messages.info(request, "You are already a member of this course.")
         else:
-            messages.success(
-                request,
-                f"You joined {group.course.name} successfully."
-            )
+            messages.success(request, f"You joined {group.course.name} successfully.")
 
         return redirect("home")
 
     memberships = (
-        Member.objects
-        .filter(user=request.user)
+        Member.objects.filter(user=request.user)
         .select_related("group__course")
         .prefetch_related("group__orak")
         .order_by("group__course__name", "group__name")
@@ -133,6 +122,7 @@ def home(request):
             "memberships": memberships,
         },
     )
+
 
 @login_required
 def lesson_detail(request, group_id, lesson_id):
@@ -148,24 +138,15 @@ def lesson_detail(request, group_id, lesson_id):
     ).first()
 
     if membership is None:
-        messages.error(
-            request,
-            "You are not a member of this course."
-        )
+        messages.error(request, "You are not a member of this course.")
         return redirect("home")
 
-    lesson_ids = list(
-        Class.objects
-        .filter(group=lesson.group)
-        .order_by("id")
-        .values_list("id", flat=True)
-    )
+    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
     assignment = (
-        Assignment.objects
-        .filter(
+        Assignment.objects.filter(
             student=request.user,
             session=lesson,
             mode=Assignment.Mode.CLASS,
@@ -182,10 +163,7 @@ def lesson_detail(request, group_id, lesson_id):
         )
 
         # Assignment exists, but no image has been uploaded yet.
-        if (
-            submission is None
-            or submission.state == Submission.State.ASSIGNED
-        ):
+        if submission is None or submission.state == Submission.State.ASSIGNED:
             return redirect(
                 "generated_assignment",
                 group_id=group_id,
@@ -217,6 +195,7 @@ def lesson_detail(request, group_id, lesson_id):
         },
     )
 
+
 @login_required
 @transaction.atomic
 def generate_assignment(request, group_id, lesson_id):
@@ -239,23 +218,16 @@ def generate_assignment(request, group_id, lesson_id):
     ).first()
 
     if membership is None:
-        messages.error(
-            request,
-            "You are not a member of this course."
-        )
+        messages.error(request, "You are not a member of this course.")
         return redirect("home")
 
     # Ha már van feladata ehhez a lessonhöz,
     # nem generálunk másodikat.
-    assignment = (
-        Assignment.objects
-        .filter(
-            student=request.user,
-            session=lesson,
-            mode=Assignment.Mode.CLASS,
-        )
-        .first()
-    )
+    assignment = Assignment.objects.filter(
+        student=request.user,
+        session=lesson,
+        mode=Assignment.Mode.CLASS,
+    ).first()
 
     if assignment is not None:
         return redirect(
@@ -265,15 +237,10 @@ def generate_assignment(request, group_id, lesson_id):
         )
 
     # A Class.name nálunk maga a topic neve.
-    topic = Topic.objects.filter(
-        name__iexact=lesson.name
-    ).first()
+    topic = Topic.objects.filter(name__iexact=lesson.name).first()
 
     if topic is None:
-        messages.error(
-            request,
-            f"No task topic exists for {lesson.name}."
-        )
+        messages.error(request, f"No task topic exists for {lesson.name}.")
         return redirect(
             "lesson_detail",
             group_id=group_id,
@@ -282,8 +249,7 @@ def generate_assignment(request, group_id, lesson_id):
 
     # Csak aktív, órai használatra engedélyezett feladatok.
     task = (
-        TaskBank.objects
-        .filter(
+        TaskBank.objects.filter(
             topic=topic,
             active=True,
             use__in=[
@@ -296,10 +262,7 @@ def generate_assignment(request, group_id, lesson_id):
     )
 
     if task is None:
-        messages.error(
-            request,
-            f"No active assignments are available for {lesson.name}."
-        )
+        messages.error(request, f"No active assignments are available for {lesson.name}.")
         return redirect(
             "lesson_detail",
             group_id=group_id,
@@ -323,6 +286,7 @@ def generate_assignment(request, group_id, lesson_id):
         lesson_id=lesson_id,
     )
 
+
 @login_required
 @transaction.atomic
 def generated_assignment(request, group_id, lesson_id):
@@ -338,24 +302,15 @@ def generated_assignment(request, group_id, lesson_id):
     ).first()
 
     if membership is None:
-        messages.error(
-            request,
-            "You are not a member of this course."
-        )
+        messages.error(request, "You are not a member of this course.")
         return redirect("home")
 
-    lesson_ids = list(
-        Class.objects
-        .filter(group=lesson.group)
-        .order_by("id")
-        .values_list("id", flat=True)
-    )
+    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
     assignment = (
-        Assignment.objects
-        .filter(
+        Assignment.objects.filter(
             student=request.user,
             session=lesson,
             mode=Assignment.Mode.CLASS,
@@ -371,36 +326,25 @@ def generated_assignment(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    submission, _ = Submission.objects.get_or_create(
-        assignment=assignment
-    )
+    submission, _ = Submission.objects.get_or_create(assignment=assignment)
 
     if request.method == "POST":
         image = request.FILES.get("solution_image")
 
         if image is None:
-            messages.error(
-                request,
-                "Please select an image."
-            )
+            messages.error(request, "Please select an image.")
 
         elif image.size > 20 * 1024 * 1024:
-            messages.error(
-                request,
-                "The image must be smaller than 20 MB."
-            )
+            messages.error(request, "The image must be smaller than 20 MB.")
 
         elif image.content_type not in [
             "image/jpeg",
             "image/png",
         ]:
-            messages.error(
-                request,
-                "Only JPG, JPEG and PNG images are allowed."
-            )
+            messages.error(request, "Only JPG, JPEG and PNG images are allowed.")
 
         else:
-            ocr_attempt = OcrAttempt.objects.create(
+            OcrAttempt.objects.create(
                 submission=submission,
                 image=image,
             )
@@ -435,6 +379,7 @@ def generated_assignment(request, group_id, lesson_id):
         },
     )
 
+
 @login_required
 def ocr_recognition(request, group_id, lesson_id):
     lesson = get_object_or_404(
@@ -466,11 +411,7 @@ def ocr_recognition(request, group_id, lesson_id):
         assignment=assignment,
     )
 
-    ocr_attempt = (
-        submission.ocr_attempts
-        .order_by("-created_at")
-        .first()
-    )
+    ocr_attempt = submission.ocr_attempts.order_by("-created_at").first()
 
     if ocr_attempt is None:
         return redirect(
@@ -481,13 +422,9 @@ def ocr_recognition(request, group_id, lesson_id):
 
     # Run OCR
     if request.method == "POST":
-
         # Maximum 3 OCR runs for this uploaded image
         if ocr_attempt.ocr_run_count >= 3:
-            messages.error(
-                request,
-                "You have already used all 3 recognition attempts for this image."
-            )
+            messages.error(request, "You have already used all 3 recognition attempts for this image.")
 
             return redirect(
                 "ocr_recognition",
@@ -505,9 +442,7 @@ def ocr_recognition(request, group_id, lesson_id):
         )
 
         submission.state = Submission.State.OCR_RUNNING
-        submission.save(
-            update_fields=["state"]
-        )
+        submission.save(update_fields=["state"])
 
         try:
             logger.info(
@@ -539,9 +474,7 @@ def ocr_recognition(request, group_id, lesson_id):
             )
 
             submission.state = Submission.State.OCR_DONE
-            submission.save(
-                update_fields=["state"]
-            )
+            submission.save(update_fields=["state"])
 
             logger.info(
                 "OCR result saved successfully: ocr_attempt=%s run_count=%s",
@@ -559,14 +492,9 @@ def ocr_recognition(request, group_id, lesson_id):
 
             # Keep the uploaded image if the API fails
             submission.state = Submission.State.IMAGE_UPLOADED
-            submission.save(
-                update_fields=["state"]
-            )
+            submission.save(update_fields=["state"])
 
-            messages.error(
-                request,
-                "Recognition failed. Check the server logs for details."
-            )
+            messages.error(request, "Recognition failed. Check the server logs for details.")
 
             return redirect(
                 "ocr_recognition",
@@ -580,12 +508,7 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    lesson_ids = list(
-        Class.objects
-        .filter(group=lesson.group)
-        .order_by("id")
-        .values_list("id", flat=True)
-    )
+    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
@@ -606,6 +529,7 @@ def ocr_recognition(request, group_id, lesson_id):
         },
     )
 
+
 @login_required
 def evaluation(request):
     attempt = int(request.GET.get("attempt", 1))
@@ -619,11 +543,11 @@ def evaluation(request):
         },
     )
 
+
 @login_required
 def course_detail(request, group_id):
     membership = (
-        Member.objects
-        .select_related("group__course")
+        Member.objects.select_related("group__course")
         .filter(
             user=request.user,
             group_id=group_id,
@@ -658,9 +582,6 @@ def leave_course(request, group_id):
             course_name = membership.group.course.name
             membership.delete()
 
-            messages.success(
-                request,
-                f"You left {course_name}."
-            )
+            messages.success(request, f"You left {course_name}.")
 
     return redirect("home")

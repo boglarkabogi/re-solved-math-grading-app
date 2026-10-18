@@ -4,7 +4,7 @@ import pytest
 from django.db import IntegrityError, transaction
 
 from bank.models import TaskBank, Topic
-from courses.models import Group, Course, Class
+from courses.models import Class, Course, Group
 
 
 @pytest.mark.django_db

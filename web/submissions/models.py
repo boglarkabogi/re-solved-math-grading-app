@@ -1,17 +1,15 @@
 import uuid
+from pathlib import Path
 
 from django.conf import settings
 from django.db import models
-from pathlib import Path
+
 
 def image_path(instance, filename):
     extension = Path(filename).suffix.lower()
 
-    return (
-        f"submissions/"
-        f"{instance.submission.public_id}/"
-        f"{uuid.uuid4().hex}{extension}"
-    )
+    return f"submissions/{instance.submission.public_id}/{uuid.uuid4().hex}{extension}"
+
 
 class Assignment(models.Model):
     """Egy konkrét feladat egy konkrét diáknak."""
@@ -20,7 +18,9 @@ class Assignment(models.Model):
         CLASS = "orai", "órai"
         PRACTICE = "gyakorlo", "gyakorló"
 
-    student = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assignments")
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="assignments"
+    )
     task = models.ForeignKey("bank.TaskBank", on_delete=models.PROTECT, related_name="assignments")
     session = models.ForeignKey(
         "courses.Class", null=True, blank=True, on_delete=models.CASCADE, related_name="assignments"
@@ -33,7 +33,9 @@ class Assignment(models.Model):
         verbose_name_plural = "kiosztások"
         constraints = [
             models.UniqueConstraint(
-                fields=["student", "session"], condition=models.Q(mode="orai"), name="one_class_task_per_student"
+                fields=["student", "session"],
+                condition=models.Q(mode="orai"),
+                name="one_class_task_per_student",
             ),
         ]
 

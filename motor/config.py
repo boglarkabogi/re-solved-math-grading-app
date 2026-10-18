@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv(Path(__file__).resolve().parent.parent / ".env", override=True)
 
+
 def _get(name, default=None, required=False):
     value = os.environ.get(name, default)
     if required and not value:
@@ -25,5 +26,6 @@ class LlmSettings:
         self.req_per_min = int(_get("LLM_MAX_REQUESTS_PER_MINUTE", "30"))
         self.timeout = 300
         self.max_retry = 3
+
 
 settings = LlmSettings()

@@ -5,9 +5,11 @@ import re
 
 PONTOK = (0, 0.25, 0.5, 0.75, 1)
 
+
 def strip_think_blocks(text):
     """A gondolkodó modellek <think>...</think> blokkjainak eltávolítása."""
     return re.sub(r"<think>.*?</think>", "", text or "", flags=re.DOTALL).strip()
+
 
 def _fix_latex_backslashes(s: str):
     """Duplázza azokat a '\\'-eket, amik nem érvényes JSON-escape-ek (pl. LaTeX: \\in, \\gcd)."""
@@ -36,8 +38,9 @@ def _first_json_object(s: str) -> str | None:
         elif c == "}":
             depth -= 1
             if depth == 0:
-                return s[start:i + 1]
+                return s[start : i + 1]
     return None  # csonka válasz
+
 
 def extract_json(text):
     """Az első teljes JSON-objektum kinyerése a válaszból (LaTeX-biztosan)."""
