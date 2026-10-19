@@ -26,7 +26,7 @@ OCR_MODELS = {
 
 
 def get_ocr_model():
-    model_key = os.getenv("OCR_MODEL", "kimi")
+    model_key = os.getenv("OCR_MODEL", "llama")
 
     if model_key not in OCR_MODELS:
         raise RuntimeError(f"Unknown OCR model: {model_key}")

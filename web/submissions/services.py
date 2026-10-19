@@ -15,9 +15,6 @@ from .models import Evaluation, Submission
 
 logger = logging.getLogger(__name__)
 
-# motor.grading.grade() returns a dict whose keys are Hungarian, because those
-# are the keys the system prompt asks the model for. This dict is the only
-# place that knows about them; everything below works with English names.
 RESULT_KEYS = {
     "score": "pont",
     "reasoning": "indoklas",
@@ -56,7 +53,6 @@ def run_grading(submission, ocr_attempt):
             submission.student_note or None,
         )
     except Exception:
-        # A network error or a broken endpoint must not lose the submission.
         logger.exception("The grading engine raised: submission=%s", submission.id)
         submission.state = Submission.State.FAILED
         submission.needs_review = True
@@ -103,8 +99,6 @@ def _store(submission, result):
             submission.needs_review = True
         else:
             submission.state = Submission.State.GRADED
-            # The model itself says the recognised text looks wrong, so a
-            # human should look at this one.
             submission.needs_review = (submission.needs_review or ocr_error_suspected or unreadable or score_was_snapped)
 
         submission.save(update_fields=["state", "needs_review"])
