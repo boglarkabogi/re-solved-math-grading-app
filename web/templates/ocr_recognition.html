@@ -349,15 +349,14 @@
 
                             </form>
 
-                        {% endif %}
-
-
                         <a
                             href="{% url 'generated_assignment' group.id lesson.id %}"
                             class="ocr-upload-another"
                         >
                             Upload another image
                         </a>
+
+                        {% endif %}
 
                     </div>
 
@@ -487,6 +486,15 @@
         if (runButton) {
             runButton.disabled = true;
             runButton.textContent = "Recognising...";
+        }
+
+        const uploadButton = document.querySelector(".ocr-upload-another");
+
+        if (uploadButton) {
+            uploadButton.style.pointerEvents = "none";
+            uploadButton.style.opacity = "0.5";
+            uploadButton.style.cursor = "not-allowed";
+            uploadButton.setAttribute("aria-disabled", "true");
         }
 
         const estimatedSeconds = 25;

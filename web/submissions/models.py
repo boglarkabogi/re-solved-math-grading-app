@@ -60,7 +60,9 @@ class Submission(models.Model):
     approved_at = models.DateTimeField("jóváhagyva", null=True, blank=True)
     needs_review = models.BooleanField("tanári ellenőrzést igényel", default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-
+    ocr_run_count = models.PositiveSmallIntegerField(default=0)
+    ocr_in_progress = models.BooleanField(default=False)
+    
     class Meta:
         verbose_name = "beadás"
         verbose_name_plural = "beadások"

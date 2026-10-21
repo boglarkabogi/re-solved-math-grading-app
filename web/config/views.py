@@ -6,10 +6,11 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
+from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from recognition.service import recognise_solution
+from motor.recognition.service import recognise_solution
 
 from bank.models import TaskBank, Topic
 from courses.models import Class, Group, Member
@@ -330,6 +331,17 @@ def generated_assignment(request, group_id, lesson_id):
 
     submission, _ = Submission.objects.get_or_create(assignment=assignment)
 
+    if submission.ocr_in_progress:
+        messages.warning(
+            request,
+            "Please wait until the current recognition finishes."
+        )
+        return redirect(
+            "ocr_recognition",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
     if request.method == "POST":
         image = request.FILES.get("solution_image")
 
@@ -364,8 +376,7 @@ def generated_assignment(request, group_id, lesson_id):
 
             return redirect(f"{url}?autostart=1")
 
-    attempt = submission.ocr_attempts.count() + 1
-    attempt = max(1, min(attempt, 3))
+    attempt = min(submission.ocr_run_count + 1, 3)
 
     return render(
         request,
@@ -380,6 +391,7 @@ def generated_assignment(request, group_id, lesson_id):
             "attempt": attempt,
         },
     )
+
 
 
 @login_required
@@ -399,10 +411,7 @@ def ocr_recognition(request, group_id, lesson_id):
         return redirect("home")
 
     assignment = get_object_or_404(
-        Assignment.objects.select_related(
-            "task",
-            "task__topic",
-        ),
+        Assignment.objects.select_related("task", "task__topic"),
         student=request.user,
         session=lesson,
         mode=Assignment.Mode.CLASS,
@@ -422,11 +431,30 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    # Run OCR
     if request.method == "POST":
-        # Maximum 3 OCR runs for this uploaded image
-        if ocr_attempt.ocr_run_count >= 3:
-            messages.error(request, "You have already used all 3 recognition attempts for this image.")
+        # Atomically reserve the recognition slot.
+        reserved = Submission.objects.filter(
+            pk=submission.pk,
+            ocr_run_count__lt=3,
+            ocr_in_progress=False,
+        ).update(
+            ocr_in_progress=True,
+            state=Submission.State.OCR_RUNNING,
+        )
+
+        if not reserved:
+            submission.refresh_from_db()
+
+            if submission.ocr_in_progress:
+                messages.warning(
+                    request,
+                    "Recognition is already running.",
+                )
+            else:
+                messages.error(
+                    request,
+                    "You have already used all 3 recognition attempts for this assignment.",
+                )
 
             return redirect(
                 "ocr_recognition",
@@ -439,12 +467,9 @@ def ocr_recognition(request, group_id, lesson_id):
             request.user.id,
             submission.id,
             ocr_attempt.id,
-            ocr_attempt.ocr_run_count + 1,
+            submission.ocr_run_count + 1,
             ocr_attempt.image.name,
         )
-
-        submission.state = Submission.State.OCR_RUNNING
-        submission.save(update_fields=["state"])
 
         try:
             logger.info(
@@ -457,26 +482,41 @@ def ocr_recognition(request, group_id, lesson_id):
                 task_text=assignment.task.task_text,
             )
 
+            # Validate the response before counting success.
+            text = result["text"]
+            model_name = result["model_name"]
+
+            if not isinstance(text, str) or not text.strip():
+                raise ValueError("OCR returned empty or invalid text.")
+
+            if not isinstance(model_name, str):
+                raise ValueError("OCR returned an invalid model name.")
+
             logger.info(
                 "recognise_solution returned successfully: model=%s text_length=%s",
-                result.get("model_name"),
-                len(result.get("text", "")),
+                model_name,
+                len(text),
             )
 
-            ocr_attempt.ocr_text = result["text"]
-            ocr_attempt.model_name = result["model_name"]
-            ocr_attempt.ocr_run_count += 1
+            # Save OCR result and counters together.
+            with transaction.atomic():
+                ocr_attempt.ocr_text = text
+                ocr_attempt.model_name = model_name
+                ocr_attempt.ocr_run_count += 1
 
-            ocr_attempt.save(
-                update_fields=[
-                    "ocr_text",
-                    "model_name",
-                    "ocr_run_count",
-                ]
-            )
+                ocr_attempt.save(
+                    update_fields=[
+                        "ocr_text",
+                        "model_name",
+                        "ocr_run_count",
+                    ]
+                )
 
-            submission.state = Submission.State.OCR_DONE
-            submission.save(update_fields=["state"])
+                Submission.objects.filter(pk=submission.pk).update(
+                    state=Submission.State.OCR_DONE,
+                    ocr_run_count=F("ocr_run_count") + 1,
+                    ocr_in_progress=False,
+                )
 
             logger.info(
                 "OCR result saved successfully: ocr_attempt=%s run_count=%s",
@@ -492,16 +532,15 @@ def ocr_recognition(request, group_id, lesson_id):
                 ocr_attempt.id,
             )
 
-            # Keep the uploaded image if the API fails
-            submission.state = Submission.State.IMAGE_UPLOADED
-            submission.save(update_fields=["state"])
+            # Failed OCR does not count against the student.
+            Submission.objects.filter(pk=submission.pk).update(
+                state=Submission.State.IMAGE_UPLOADED,
+                ocr_in_progress=False,
+            )
 
-            messages.error(request, "Recognition failed. Check the server logs for details.")
-
-            return redirect(
-                "ocr_recognition",
-                group_id=group_id,
-                lesson_id=lesson_id,
+            messages.error(
+                request,
+                "Recognition failed. Please try again.",
             )
 
         return redirect(
@@ -510,11 +549,15 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
+    lesson_ids = list(
+        Class.objects.filter(group=lesson.group)
+        .order_by("id")
+        .values_list("id", flat=True)
+    )
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
-    attempt = ocr_attempt.ocr_run_count
+    attempt = submission.ocr_run_count
 
     return render(
         request,
@@ -530,6 +573,7 @@ def ocr_recognition(request, group_id, lesson_id):
             "attempt": attempt,
         },
     )
+
 
 @login_required
 def evaluation(request, group_id, lesson_id):
