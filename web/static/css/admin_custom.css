@@ -1,0 +1,462 @@
+
+/* =========================================
+   RESOLVE ADMIN DASHBOARD
+   MATCHING STUDENT HOME PAGE
+   ========================================= */
+
+/* MAIN — same sizing as home-main */
+
+@font-face {
+    font-family: "BBH Bartle";
+    src: url("../fonts/BBHBartle-Regular.ttf") format("truetype");
+    font-weight: 400;
+    font-style: normal;
+    font-display: swap;
+}
+
+.dashboard #content {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+}
+
+.dashboard #content-main {
+    float: none;
+    width: 100%;
+    max-width: none;
+}
+
+.dashboard #content-related {
+    display: none;
+}
+
+.resolve-dashboard {
+    width: 100%;
+}
+
+.resolve-dashboard-main {
+    width: 100%;
+    max-width: 1120px;
+    box-sizing: border-box;
+    margin: 0 auto;
+    padding: 40px 48px;
+}
+
+/* OUTER CONTAINER — same as courses-section */
+
+.resolve-dashboard-container {
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid #e5e7eb;
+    background: #ffffff;
+    padding: 28px;
+}
+
+/* HEADING — same as courses-heading */
+
+.resolve-dashboard-heading {
+    margin-bottom: 20px;
+}
+
+.resolve-dashboard-heading h1 {
+    margin: 0 0 6px !important;
+    padding: 0;
+    font-size: 20px !important;
+    font-weight: 700;
+    color: #111827;
+}
+
+.resolve-dashboard-heading p {
+    margin: 0;
+    color: #777777;
+    font-size: 10px;
+}
+
+/* SECTION LIST — same as course-list */
+
+.resolve-dashboard-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-top: 22px;
+}
+
+/* SECTION — same as course-card-wrapper */
+
+.resolve-dashboard-section {
+    width: 100%;
+    margin: 0;
+    border: none;
+    background: transparent;
+}
+
+/* COLLAPSIBLE HEADER — same as course-card */
+
+.resolve-section-toggle {
+    width: 100%;
+    min-height: 76px;
+
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    padding: 16px 20px;
+
+    border: 1px solid #eeeeee;
+    border-radius: 0;
+    background: #fafafa;
+
+    color: #111827;
+    text-align: left;
+    font: inherit;
+    cursor: pointer;
+
+    transition: background 0.15s ease;
+}
+
+.resolve-section-toggle:hover {
+    background: #f3f4f6;
+}
+
+.resolve-section-toggle:focus-visible {
+    outline: 2px solid #111827;
+    outline-offset: -2px;
+}
+
+/* CHEVRON — same as course-chevron */
+
+.resolve-section-chevron {
+    flex-shrink: 0;
+    width: 18px;
+    margin-right: 0;
+
+    color: #777777;
+    font-size: 14px;
+    text-align: center;
+
+    transition: transform 0.2s ease;
+}
+
+.resolve-section-toggle[aria-expanded="true"]
+.resolve-section-chevron {
+    transform: rotate(180deg);
+}
+
+/* CATEGORY TITLE */
+
+.resolve-section-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.resolve-section-info h2,
+#content .resolve-section-info h2 {
+    margin: 0 0 5px;
+    padding: 0;
+    border: none;
+    background: transparent;
+
+    color: #111827;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.resolve-section-info p {
+    margin: 0;
+    color: #777777;
+    font-size: 10px;
+    font-weight: 400;
+}
+
+/* EXPANDABLE PANEL — same as lesson-panel */
+
+.resolve-section-panel {
+    padding: 0;
+    border-left: 1px solid #eeeeee;
+    border-right: 1px solid #eeeeee;
+    border-bottom: 1px solid #eeeeee;
+    border-top: none;
+
+    background: #fafafa;
+}
+
+.resolve-section-panel[hidden] {
+    display: none !important;
+}
+
+/* GRID — same as lesson-grid */
+
+.resolve-dashboard-grid,
+.resolve-section-panel .resolve-dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 12px;
+    padding: 18px;
+}
+
+/* CARDS — student lesson-card styling */
+
+.resolve-dashboard-card,
+.resolve-section-panel .resolve-dashboard-card {
+    min-width: 0;
+    min-height: 100px;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+
+    box-sizing: border-box;
+    padding: 16px;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 0;
+    background: #ffffff;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        transform 0.15s ease;
+}
+
+.resolve-dashboard-card:hover,
+.resolve-dashboard-card:focus-within {
+    background: #f8f8f8;
+    border-color: #cfd3d9;
+    transform: translateY(-1px);
+}
+
+/* CARD NAME */
+
+.resolve-card-title {
+    flex: 1;
+    min-width: 0;
+
+    color: #101827 !important;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 1.5;
+    text-decoration: none !important;
+
+    overflow-wrap: anywhere;
+}
+
+a.resolve-card-title:hover {
+    text-decoration: underline !important;
+}
+
+/* ACTION ICONS */
+
+.resolve-card-actions {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    flex-shrink: 0;
+    gap: 8px;
+
+    opacity: 1;
+    visibility: visible;
+}
+
+.resolve-card-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+
+    width: 30px;
+    height: 30px;
+    padding: 0;
+
+    border: 1px solid #e5e7eb;
+    border-radius: 0;
+    background: #ffffff;
+
+    color: #111111 !important;
+    text-decoration: none !important;
+
+    transition:
+        background 0.15s ease,
+        border-color 0.15s ease,
+        color 0.15s ease;
+}
+
+.resolve-card-icon svg {
+    display: block;
+    width: 15px;
+    height: 15px;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.7;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.resolve-card-icon:hover,
+.resolve-card-icon:focus-visible {
+    background: #111111;
+    border-color: #111111;
+    color: #ffffff !important;
+}
+
+/* TABLET — same as student lesson grid */
+
+@media (max-width: 1000px) and (min-width: 769px) {
+    .resolve-dashboard-grid,
+    .resolve-section-panel .resolve-dashboard-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+/* MOBILE — same as home.css */
+
+@media (max-width: 768px) {
+    .resolve-dashboard-main {
+        padding: 24px 16px;
+    }
+
+    .resolve-dashboard-container {
+        padding: 18px;
+    }
+
+    .resolve-dashboard-heading h1 {
+        font-size: 18px !important;
+    }
+
+    .resolve-section-toggle {
+        padding: 14px;
+    }
+
+    .resolve-dashboard-grid,
+    .resolve-section-panel .resolve-dashboard-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+    }
+
+    .resolve-dashboard-card,
+    .resolve-section-panel .resolve-dashboard-card {
+        min-height: 80px;
+        padding: 14px;
+    }
+}
+
+
+/* =========================================
+   FIX DJANGO ADMIN BACKGROUND AND HEADER
+   ========================================= */
+
+:root {
+    color-scheme: light;
+    --body-bg: #ffffff;
+    --body-fg: #111827;
+    --header-bg: #ffffff;
+    --header-color: #111111;
+    --header-link-color: #111111;
+    --breadcrumbs-bg: #ffffff;
+    --breadcrumbs-fg: #777777;
+    --breadcrumbs-link-fg: #111111;
+}
+
+/* White background everywhere */
+html,
+body,
+#container,
+#main,
+.main,
+#content {
+    background: #ffffff !important;
+}
+
+/* Header matching ReSolved */
+#header {
+    background: #ffffff !important;
+    color: #111111 !important;
+    border-bottom: 1px solid #eeeeee;
+    min-height: 70px;
+    padding: 16px 48px;
+}
+
+#branding,
+#branding h1 {
+    background: transparent !important;
+}
+
+#branding .resolve-admin-logo {
+    font-family: "BBH Bartle", sans-serif !important;
+    font-size: 22px;
+    font-weight: 400;
+    color: #111111 !important;
+}
+
+#user-tools,
+#user-tools a,
+#user-tools button {
+    color: #111111 !important;
+}
+
+/* Hide theme toggle since we use one consistent theme */
+.theme-toggle {
+    display: none !important;
+}
+
+/* Hide breadcrumbs on homepage only */
+.dashboard div.breadcrumbs {
+    display: none !important;
+}
+
+/* No dark frame around content */
+.dashboard #content {
+    background: #ffffff !important;
+    padding: 0 !important;
+}
+
+.resolve-dashboard-main {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 48px;
+}
+
+/* Same outer border as student Home */
+.resolve-dashboard-container {
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    padding: 28px;
+}
+
+/* Keep cards white */
+.resolve-section-panel {
+    background: #fafafa !important;
+}
+
+.resolve-section-toggle {
+    background: #fafafa !important;
+}
+
+.resolve-dashboard-card {
+    background: #ffffff !important;
+}
+
+@media (max-width: 768px) {
+    #header {
+        padding: 16px;
+    }
+
+    .resolve-dashboard-main {
+        padding: 24px 16px;
+    }
+
+    .resolve-dashboard-container {
+        padding: 18px;
+    }
+}
+
+/* Restore original ReSolved logo font */
+#header #branding #site-name .resolve-admin-logo {
+    font-family: "BBH Bartle", sans-serif !important;
+    font-size: 22px !important;
+    font-weight: 400 !important;
+    letter-spacing: 0 !important;
+    color: #111111 !important;
+    text-decoration: none !important;
+}
