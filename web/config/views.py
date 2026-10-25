@@ -10,16 +10,47 @@ from django.db.models import F
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
-from motor.recognition.service import recognise_solution
 
-from bank.models import TaskBank, Topic
+from bank.models import TaskBank
 from courses.models import Class, Group, Member
+from motor.recognition.service import recognise_solution
 from submissions.models import Assignment, OcrAttempt, Submission
 from submissions.services import run_grading
 
 logger = logging.getLogger(__name__)
 
 User = get_user_model()
+
+LESSON_STATUS = {
+    Submission.State.ASSIGNED: {"label": "Task generated", "css": "generated"},
+    Submission.State.IMAGE_UPLOADED: {"label": "Image uploaded", "css": "uploaded"},
+    Submission.State.OCR_RUNNING: {"label": "Recognising…", "css": "uploaded"},
+    Submission.State.OCR_DONE: {"label": "Text recognised", "css": "recognised"},
+    Submission.State.GRADING: {"label": "Evaluating…", "css": "evaluating"},
+    Submission.State.GRADED: {"label": "Evaluated", "css": "graded"},
+    Submission.State.FAILED: {"label": "Needs attention", "css": "failed"},
+}
+
+LESSON_NOT_STARTED = {"label": "Not started", "css": "not-started"}
+
+
+def _attach_lesson_status(user, memberships):
+    """Put this student's own progress onto every lesson card.
+
+    One query for the whole page: the lessons are already prefetched, so the
+    status is written onto those cached objects.
+    """
+    states = dict(
+        Submission.objects.filter(
+            assignment__student=user,
+            assignment__mode=Assignment.Mode.CLASS,
+            assignment__session__isnull=False,
+        ).values_list("assignment__session_id", "state")
+    )
+
+    for membership in memberships:
+        for lesson in membership.group.orak.all():
+            lesson.student_status = LESSON_STATUS.get(states.get(lesson.id), LESSON_NOT_STARTED)
 
 
 def register(request):
@@ -111,12 +142,14 @@ def home(request):
 
         return redirect("home")
 
-    memberships = (
+    memberships = list(
         Member.objects.filter(user=request.user)
         .select_related("group__course")
         .prefetch_related("group__orak")
         .order_by("group__course__name", "group__name")
     )
+
+    _attach_lesson_status(request.user, memberships)
 
     return render(
         request,
@@ -125,6 +158,23 @@ def home(request):
             "memberships": memberships,
         },
     )
+
+
+def _finished_redirect(submission, group_id, lesson_id):
+    """Send the student to the result when the submission is already graded.
+
+    A graded submission is closed. Without this guard the student could walk
+    back through the flow, upload another image, run the recognition again and
+    ask for a second opinion on a task that already has a score.
+    """
+    if submission is not None and submission.state == Submission.State.GRADED:
+        return redirect(
+            "evaluation",
+            group_id=group_id,
+            lesson_id=lesson_id,
+        )
+
+    return None
 
 
 @login_required
@@ -186,6 +236,17 @@ def lesson_detail(request, group_id, lesson_id):
                 lesson_id=lesson_id,
             )
 
+        if submission is not None and submission.state in [
+            Submission.State.GRADING,
+            Submission.State.GRADED,
+            Submission.State.FAILED,
+        ]:
+            return redirect(
+                "evaluation",
+                group_id=group_id,
+                lesson_id=lesson_id,
+            )
+
     return render(
         request,
         "lesson.html",
@@ -239,11 +300,10 @@ def generate_assignment(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    # A Class.name nálunk maga a topic neve.
-    topic = Topic.objects.filter(name__iexact=lesson.name).first()
+    topic = lesson.topic
 
     if topic is None:
-        messages.error(request, f"No task topic exists for {lesson.name}.")
+        messages.error(request, "This lesson has no topic set, so no task can be drawn.")
         return redirect(
             "lesson_detail",
             group_id=group_id,
@@ -331,11 +391,14 @@ def generated_assignment(request, group_id, lesson_id):
 
     submission, _ = Submission.objects.get_or_create(assignment=assignment)
 
+    finished = _finished_redirect(submission, group_id, lesson_id)
+
+    if finished is not None:
+        messages.info(request, "This assignment has already been evaluated.")
+        return finished
+
     if submission.ocr_in_progress:
-        messages.warning(
-            request,
-            "Please wait until the current recognition finishes."
-        )
+        messages.warning(request, "Please wait until the current recognition finishes.")
         return redirect(
             "ocr_recognition",
             group_id=group_id,
@@ -393,7 +456,6 @@ def generated_assignment(request, group_id, lesson_id):
     )
 
 
-
 @login_required
 def ocr_recognition(request, group_id, lesson_id):
     lesson = get_object_or_404(
@@ -421,6 +483,12 @@ def ocr_recognition(request, group_id, lesson_id):
         Submission,
         assignment=assignment,
     )
+
+    finished = _finished_redirect(submission, group_id, lesson_id)
+
+    if finished is not None:
+        messages.info(request, "This assignment has already been evaluated.")
+        return finished
 
     ocr_attempt = submission.ocr_attempts.order_by("-created_at").first()
 
@@ -502,13 +570,11 @@ def ocr_recognition(request, group_id, lesson_id):
             with transaction.atomic():
                 ocr_attempt.ocr_text = text
                 ocr_attempt.model_name = model_name
-                ocr_attempt.ocr_run_count += 1
 
                 ocr_attempt.save(
                     update_fields=[
                         "ocr_text",
                         "model_name",
-                        "ocr_run_count",
                     ]
                 )
 
@@ -518,10 +584,12 @@ def ocr_recognition(request, group_id, lesson_id):
                     ocr_in_progress=False,
                 )
 
+            submission.refresh_from_db(fields=["ocr_run_count"])
+
             logger.info(
                 "OCR result saved successfully: ocr_attempt=%s run_count=%s",
                 ocr_attempt.id,
-                ocr_attempt.ocr_run_count,
+                submission.ocr_run_count,
             )
 
         except Exception:
@@ -549,11 +617,7 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-    lesson_ids = list(
-        Class.objects.filter(group=lesson.group)
-        .order_by("id")
-        .values_list("id", flat=True)
-    )
+    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
 
     lesson_number = lesson_ids.index(lesson.id) + 1
 
@@ -578,7 +642,7 @@ def ocr_recognition(request, group_id, lesson_id):
 @login_required
 def evaluation(request, group_id, lesson_id):
     """The evaluation step of the submission flow.
- 
+
     GET  = show the result
     POST = either start the evaluation, or send feedback to the teacher about
            an evaluation that already happened. A successful evaluation is
@@ -589,27 +653,27 @@ def evaluation(request, group_id, lesson_id):
         id=lesson_id,
         group_id=group_id,
     )
- 
+
     membership = Member.objects.filter(
         user=request.user,
         group=lesson.group,
     ).first()
- 
+
     if membership is None:
         messages.error(request, "You are not a member of this course.")
         return redirect("home")
- 
+
     assignment = get_object_or_404(
         Assignment.objects.select_related("task", "task__topic"),
         student=request.user,
         session=lesson,
         mode=Assignment.Mode.CLASS,
     )
- 
+
     submission = get_object_or_404(Submission, assignment=assignment)
- 
+
     ocr_attempt = submission.ocr_attempts.order_by("-created_at").first()
- 
+
     # Without recognised text there is nothing to evaluate.
     if ocr_attempt is None or not ocr_attempt.ocr_text:
         messages.error(request, "Run the recognition before asking for an evaluation.")
@@ -618,7 +682,7 @@ def evaluation(request, group_id, lesson_id):
             group_id=group_id,
             lesson_id=lesson_id,
         )
- 
+
     if request.method == "POST":
         # Two different forms post here: the feedback box carries
         # "student_feedback", anything else means "start the evaluation".
@@ -626,15 +690,15 @@ def evaluation(request, group_id, lesson_id):
             _save_feedback(request, submission)
         else:
             _start_evaluation(request, submission, ocr_attempt)
- 
+
         return redirect(
             "evaluation",
             group_id=group_id,
             lesson_id=lesson_id,
         )
- 
+
     lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
- 
+
     return render(
         request,
         "evaluation.html",
@@ -649,8 +713,8 @@ def evaluation(request, group_id, lesson_id):
             "evaluation": submission.evaluations.first(),
         },
     )
- 
- 
+
+
 def _start_evaluation(request, submission, ocr_attempt):
     """Run the grading engine, unless this submission is already graded."""
     if submission.state == Submission.State.GRADED:
@@ -658,21 +722,21 @@ def _start_evaluation(request, submission, ocr_attempt):
         # keep trying until a better score comes out.
         messages.error(request, "This submission has already been evaluated.")
         return
- 
+
     # The comment about the recognised text arrives from the recognition page
     # and is an input to grade(). Other buttons post without the field, and
     # then we keep what the student wrote earlier.
     if "student_note" in request.POST:
         submission.student_note = request.POST.get("student_note", "").strip()
         submission.save(update_fields=["student_note"])
- 
+
     logger.info(
         "Evaluation requested: user=%s submission=%s note_length=%s",
         request.user.id,
         submission.id,
         len(submission.student_note),
     )
- 
+
     evaluation_result = run_grading(submission, ocr_attempt)
 
     if evaluation_result is None or evaluation_result.score is None:
@@ -682,31 +746,33 @@ def _start_evaluation(request, submission, ocr_attempt):
         )
     else:
         messages.success(request, "Your solution has been evaluated.")
- 
+
+
 def _save_feedback(request, submission):
     """Store what the student wants the teacher to look at."""
     evaluation_result = submission.evaluations.first()
- 
+
     if evaluation_result is None:
         messages.error(request, "There is no evaluation to give feedback on yet.")
         return
- 
+
     evaluation_result.student_feedback = request.POST.get("student_feedback", "").strip()
     evaluation_result.student_feedback_at = timezone.now()
     evaluation_result.save(update_fields=["student_feedback", "student_feedback_at"])
- 
+
     # This is what puts the submission on the teacher's review list.
     submission.needs_review = True
     submission.save(update_fields=["needs_review"])
- 
+
     logger.info(
         "Student feedback saved: user=%s submission=%s evaluation=%s",
         request.user.id,
         submission.id,
         evaluation_result.id,
     )
- 
+
     messages.success(request, "Your feedback was sent to the teacher.")
+
 
 @login_required
 def course_detail(request, group_id):

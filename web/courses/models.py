@@ -1,5 +1,26 @@
+import secrets
+
 from django.conf import settings
 from django.db import models
+
+INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
+INVITE_CODE_LENGTH = 6
+
+
+def generate_invite_code(length=INVITE_CODE_LENGTH):
+    """A fresh invite code that no group uses yet."""
+
+    from django.apps import apps
+
+    group_model = apps.get_model("courses", "Group")
+
+    for _attempt in range(50):
+        code = "".join(secrets.choice(INVITE_CODE_ALPHABET) for _ in range(length))
+
+        if not group_model.objects.filter(invite_code=code).exists():
+            return code
+
+    raise RuntimeError("Nem sikerült szabad meghivókódot találni.")
 
 
 class Course(models.Model):
@@ -53,7 +74,22 @@ class Class(models.Model):
         CLOSED = "lezart", "lezárt"
 
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="orak")
-    name = models.CharField("név", max_length=120, blank=True)
+    topic = models.ForeignKey(
+        "bank.Topic",
+        # Null only so that the lessons created before this field existed
+        # survive the migration. New ones must name their topic: the task
+        # drawing has no other way to know what to hand out.
+        null=True,
+        on_delete=models.PROTECT,
+        related_name="class_sessions",
+        verbose_name="témakör",
+    )
+    name = models.CharField(
+        "rövid név",
+        max_length=120,
+        blank=True,
+        help_text="Üresen hagyva a témakör neve jelenik meg. Pl. LNKO, Kongruenciák II.",
+    )
     state = models.CharField("állapot", max_length=16, choices=State.choices, default=State.PLANNED)
     opened_at = models.DateTimeField("megnyitva", null=True, blank=True)
     closed_at = models.DateTimeField("lezárva", null=True, blank=True)
@@ -65,7 +101,18 @@ class Class(models.Model):
         verbose_name_plural = "órák"
 
     def __str__(self):
-        return f"{self.group} – {self.name or self.created_at.date()}"
+        return f"{self.group} – {self.display_name}"
+
+    @property
+    def display_name(self):
+        """What to show on the page: the short name, or the topic it belongs to."""
+        if self.name:
+            return self.name
+
+        if self.topic_id is not None:
+            return self.topic.name
+
+        return str(self.created_at.date())
 
     @property
     def is_open(self):

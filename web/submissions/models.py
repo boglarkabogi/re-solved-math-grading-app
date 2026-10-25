@@ -62,7 +62,7 @@ class Submission(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     ocr_run_count = models.PositiveSmallIntegerField(default=0)
     ocr_in_progress = models.BooleanField(default=False)
-    
+
     class Meta:
         verbose_name = "beadás"
         verbose_name_plural = "beadások"
@@ -78,7 +78,6 @@ class OcrAttempt(models.Model):
     image = models.ImageField("kép", upload_to=image_path)
     ocr_text = models.TextField("felismert szöveg", blank=True)
     model_name = models.CharField("modell", max_length=120, blank=True)
-    ocr_run_count = models.PositiveSmallIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

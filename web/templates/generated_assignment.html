@@ -1,7 +1,7 @@
 {% extends "app_base.html" %}
 {% load static %}
 
-{% block cim %}{{ lesson.name }} | ReSolve{% endblock %}
+{% block cim %}{{ lesson.display_name }} | ReSolve{% endblock %}
 
 {% block page_css %}
 <link
@@ -22,7 +22,7 @@
         <section class="generated-topic">
 
             <h1>
-                Topic: {{ lesson.name }}
+                Topic: {{ lesson.display_name }}
             </h1>
 
             <p>

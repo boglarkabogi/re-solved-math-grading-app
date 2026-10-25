@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from django.contrib.auth.models import Group as PermissionGroup
 
 from .models import ExternalId, User
 
@@ -17,3 +18,4 @@ class UserAdmin(DjangoUserAdmin):
 
 
 admin.site.register(ExternalId)
+admin.site.unregister(PermissionGroup)

@@ -1,6 +1,7 @@
 """Shared test helpers."""
 
 import pytest
+import requests
 from django.contrib.auth import get_user_model
 from django.urls import reverse
 
@@ -29,14 +30,18 @@ def world(db):
     )
     course = Course.objects.create(name="Dimat I.", term="2026/27/1")
     group = Group.objects.create(course=course, name="1. csoport", invite_code="ABC123")
-    lesson = Class.objects.create(group=group, name="LNKO")
+    lesson = Class.objects.create(group=group, topic=topic, name="LNKO")
 
     student = build_student("s@example.com")
     Member.objects.create(user=student, group=group)
 
     assignment = Assignment.objects.create(student=student, task=task, session=lesson)
-    submission = Submission.objects.create(assignment=assignment, state=Submission.State.OCR_DONE)
-    OcrAttempt.objects.create(submission=submission, ocr_text="12 = 2*6, 18 = 3*6, lnko = 6", ocr_run_count=1)
+    submission = Submission.objects.create(
+        assignment=assignment,
+        state=Submission.State.OCR_DONE,
+        ocr_run_count=1,
+    )
+    OcrAttempt.objects.create(submission=submission, ocr_text="12 = 2*6, 18 = 3*6, lnko = 6")
     return {
         "student": student,
         "group": group,
@@ -90,19 +95,29 @@ def answer(**overrides):
 
 @pytest.fixture(autouse=True)
 def no_network(monkeypatch):
-    """Nothing in the test suite may talk to a model endpoint.
+    """Nothing in the test suite may reach a model endpoint.
 
-    The guard sits on llm.chat, the one door to the network, and not on
-    grade(): a test that wants to exercise the real parsing and prompt
-    building replaces llm.chat with its own stub, and that replacement wins
-    over this one. If a test forgets to stub anything, it gets this error
-    instead of a slow, billed call.
+    There are two doors. The grading engine goes through llm.chat, and the
+    recognition goes straight out through requests. Both are shut here, so a
+    test that forgets to stub anything gets an immediate error instead of a
+    slow, billed call - the recognition endpoint waits 180 seconds.
+
+    Neither guard sits on grade() or on recognise_solution(): a test that wants
+    to exercise the real prompt building and parsing replaces the door it needs
+    with its own stub, and that replacement wins over this one.
     """
 
-    def refuse(*args, **kwargs):
+    def refuse_model(*args, **kwargs):
         raise RuntimeError("A test tried to call a model. Stub llm.chat or use the `calls` fixture.")
 
-    monkeypatch.setattr(llm, "chat", refuse)
+    def refuse_http(*args, **kwargs):
+        raise RuntimeError("A test tried to make an HTTP request. Stub requests.post in the test.")
+
+    monkeypatch.setattr(llm, "chat", refuse_model)
+
+    # On the Session class, so it covers requests.post, .get and anything else
+    # built on top of them.
+    monkeypatch.setattr(requests.sessions.Session, "request", refuse_http)
 
 
 @pytest.fixture

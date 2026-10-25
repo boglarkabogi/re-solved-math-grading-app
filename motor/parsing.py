@@ -72,7 +72,7 @@ def normalize_score(result: dict):
         score = float(result["pont"])
     except (KeyError, TypeError, ValueError):
         return False
-    
+
     if not 0 <= score <= 1:
         result["pont"] = None
         result["hiba"] = f"A modell a skálán kívüli pontot adott: {score!r}"

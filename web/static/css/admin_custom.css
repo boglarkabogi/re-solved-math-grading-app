@@ -460,3 +460,20 @@ body,
     color: #111111 !important;
     text-decoration: none !important;
 }
+
+.resolve-invite-code-button {
+    margin-left: 8px;
+    padding: 6px 12px;
+
+    background: #101827;
+    color: #ffffff;
+
+    border: none;
+    cursor: pointer;
+
+    font-size: 12px;
+}
+
+.resolve-invite-code-button:hover {
+    background: #000000;
+}

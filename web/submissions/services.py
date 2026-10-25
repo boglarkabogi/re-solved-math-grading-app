@@ -29,6 +29,7 @@ RESULT_KEYS = {
     "model_name": "modell",
 }
 
+
 def run_grading(submission, ocr_attempt):
     """Grade one submission and return the stored Evaluation.
 
@@ -61,9 +62,10 @@ def run_grading(submission, ocr_attempt):
 
     return _store(submission, result)
 
+
 def _field(result, name):
     """Read one field of the engine's answer by its English name.
- 
+
     A name that RESULT_KEYS does not map, or that the model left out, reads as
     None instead of raising: a changed prompt must not take the page down.
     """
@@ -72,6 +74,7 @@ def _field(result, name):
         logger.warning("RESULT_KEYS has no entry for %r", name)
         return None
     return result.get(key)
+
 
 def _store(submission, result):
     score = _as_score(_field(result, "score"))
@@ -89,7 +92,7 @@ def _store(submission, result):
             confidence=_as_confidence(result.get(RESULT_KEYS["confidence"])),
             ocr_error_suspected=ocr_error_suspected or unreadable,
             ocr_error_reason=_field(result, "ocr_error_reason") or "",
-            student_final_answer=_field(result, "student_final_answer") or "",     
+            student_final_answer=_field(result, "student_final_answer") or "",
             raw_response=result.get(RESULT_KEYS["raw_response"]) or "",
             prompt=result.get(RESULT_KEYS["prompt"]) or "",
         )
@@ -99,7 +102,9 @@ def _store(submission, result):
             submission.needs_review = True
         else:
             submission.state = Submission.State.GRADED
-            submission.needs_review = (submission.needs_review or ocr_error_suspected or unreadable or score_was_snapped)
+            submission.needs_review = (
+                submission.needs_review or ocr_error_suspected or unreadable or score_was_snapped
+            )
 
         submission.save(update_fields=["state", "needs_review"])
 
@@ -116,7 +121,7 @@ def _store(submission, result):
 
 def _as_score(value):
     """Turn the engine's score into a Decimal, or None.
- 
+
     The scoring scale is the engine's business, not ours: motor.parsing has
     already moved the score onto one of the five allowed values, or set it to
     None when the model answered outside 0..1. Here we only convert, so the

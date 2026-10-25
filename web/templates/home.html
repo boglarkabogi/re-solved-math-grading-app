@@ -165,11 +165,11 @@
                                             </span>
 
                                             <h3>
-                                                {{ lesson.name }}
+                                                {{ lesson.display_name }}
                                             </h3>
 
-                                            <span class="lesson-status not-started">
-                                                Not started
+                                            <span class="lesson-status {{ lesson.student_status.css }}">
+                                                {{ lesson.student_status.label }}
                                             </span>
 
                                         </a>
