@@ -1,53 +1,251 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block cim %}Fejlesztői felület – értékelés{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/devtools.css' %}">
+{% endblock %}
+
 {% block tartalom %}
-  <h1>Értékelés próbája (OCR nélkül)</h1>
-  <p>
-    A megoldás szövege kézzel beírható, a rendszer egyenesen az értékelő modellt hívja.
-    Így a prompt kép nélkül hangolható, és a bemenet minden futásnál ugyanaz.</p>
 
-  {% if bank_tasks %}
-    <details>
-      <summary>Előtöltés a feladatbankból</summary>
-      <ul>
-        {% for task in bank_tasks %}
-          <li><a href="?task={{ task.pk }}">{{ task.code }} — {{ task.topic }}</a></li>
-        {% endfor %}
-      </ul>
-    </details>
-  {% endif %}
+<script src="https://cdn.jsdelivr.net/npm/htmx.org@2.0.4/dist/htmx.min.js"></script>
 
-    <form hx-post="{% url 'devtools:trial-run' %}"
-        hx-target="#result"
-        hx-swap="innerHTML"
-        hx-disabled-elt="find button"
-        hx-indicator="#waiting">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Értékelés futtatása</button>
-    <progress id="waiting" class="htmx-indicator"></progress>
-  </form>
- 
-  <div id="result"></div>
+<div class="dev-page">
 
-  <h2>Legutóbbi próbafuttatások</h2>
-  <table>
-    <thead>
-      <tr><th>Mikor</th><th>Modell</th><th>Pont</th><th>Magabiztosság</th><th>Idő</th></tr>
-    </thead>
-    <tbody>
-      {% for run in recent_runs %}
-        <tr>
-          <td>{{ run.created_at|date:"m.d. H:i" }}</td>
-          <td><small>{{ run.model_name|default:"–" }}</small></td>
-          <td>{{ run.score|default:"–" }}</td>
-          <td>{{ run.confidence|default:"–" }}</td>
-          <td>{{ run.duration_ms|default:"–" }} ms</td>
-        </tr>
-      {% empty %}
-        <tr><td colspan="5">Még nincs futtatás.</td></tr>
-      {% endfor %}
-    </tbody>
-  </table>
+    <main class="dev-main">
+
+        <div class="dev-header">
+            <h1>Értékelés próbája</h1>
+            <span class="dev-badge">OCR nélkül</span>
+        </div>
+
+        <p class="dev-lead">
+            A megoldás szövege kézzel beírható, a rendszer egyenesen az értékelő modellt hívja.
+            Így a prompt kép nélkül hangolható, és a bemenet minden futásnál pontosan ugyanaz.
+        </p>
+
+        {% if messages %}
+            {% for message in messages %}
+                <div class="dev-card">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+
+
+        <!-- EGY FUTTATÁS -->
+
+        <section class="dev-card">
+
+            <h2>Egy megoldás értékelése</h2>
+            <p>Előtöltheted a feladatbankból, vagy beírhatsz bármit.</p>
+
+            <div class="dev-stack">
+
+                <div>
+                    <input
+                        type="search"
+                        id="task-search"
+                        class="dev-search"
+                        placeholder="Keresés a feladatbankban: kód, témakör vagy szöveg…"
+                        autocomplete="off"
+                    >
+
+                    <ul class="dev-task-list" id="task-list">
+                        {% for task in bank_tasks %}
+                            <li data-haystack="{{ task.code|lower }} {{ task.topic|lower }} {{ task.task_text|lower }}">
+                                <a href="?task={{ task.pk }}">
+                                    <span class="dev-task-code">{{ task.code }}</span>
+                                    <span class="dev-task-topic">{{ task.topic }}</span>
+                                    <span class="dev-task-text">{{ task.task_text }}</span>
+                                </a>
+                            </li>
+                        {% empty %}
+                            <li class="dev-empty">A feladatbank üres.</li>
+                        {% endfor %}
+                    </ul>
+
+                    <p class="dev-meta" id="task-count" style="margin-top:8px"></p>
+                </div>
+
+                <form
+                    class="dev-form"
+                    hx-post="{% url 'devtools:trial-run' %}"
+                    hx-target="#result"
+                    hx-swap="innerHTML"
+                    hx-disabled-elt="find button"
+                    hx-indicator="#waiting"
+                >
+                    {% csrf_token %}
+                    {{ form.as_p }}
+
+                    <button type="submit" class="dev-button">Értékelés futtatása</button>
+                    <progress id="waiting" class="htmx-indicator"></progress>
+                </form>
+
+            </div>
+
+            <div id="result" class="dev-result"></div>
+
+        </section>
+
+        
+        <!-- EGYEDI FUTTATÁSOK -->
+
+        <section class="dev-card">
+
+            <h2>Legutóbbi próbafuttatások</h2>
+            <p>Kattints egy sorra, és az eredménye megjelenik fent, az űrlap alatt.</p>
+
+            <table class="dev-table">
+                <thead>
+                    <tr>
+                        <th>Mikor</th>
+                        <th>Modell</th>
+                        <th class="dev-number">Pont</th>
+                        <th class="dev-number">Magabiztosság</th>
+                        <th class="dev-number">Idő</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in recent_runs %}
+                        <tr
+                            class="dev-clickable"
+                            hx-get="{% url 'devtools:trial-run-detail' run.pk %}"
+                            hx-target="#result"
+                            hx-swap="innerHTML"
+                            title="Megnyitás"
+                        >
+                            <td>{{ run.created_at|date:"m.d. H:i" }}</td>
+                            <td>{{ run.model_name|default:"–" }}</td>
+                            <td class="dev-number">{{ run.score|default:"–" }}</td>
+                            <td class="dev-number">{{ run.confidence|default:"–" }}</td>
+                            <td class="dev-number">{{ run.duration_ms|default:"–" }} ms</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="dev-empty">Még nincs futtatás.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </section>
+
+        <!-- REGRESSZIÓS KÉSZLET -->
+
+        <section class="dev-card">
+
+            <h2>Regressziós készlet</h2>
+            <p>
+                Jelenleg {{ cases.count }} teszteset van eltárolva. Egy futás mindegyiken
+                végigmegy, és esetenként elmenti, mit mondott a modell – így a prompt- és
+                modellváltozások hatása összehasonlítható.
+            </p>
+
+            <div class="dev-columns">
+
+                <form
+                    class="dev-form"
+                    method="post"
+                    action="{% url 'devtools:import-cases' %}"
+                    enctype="multipart/form-data"
+                >
+                    {% csrf_token %}
+                    {{ csv_form.as_p }}
+                    <button type="submit" class="dev-button dev-button--quiet">CSV betöltése</button>
+                </form>
+
+                <form
+                    class="dev-form"
+                    hx-post="{% url 'devtools:benchmark-start' %}"
+                    hx-target="#benchmark"
+                    hx-swap="innerHTML"
+                    hx-disabled-elt="find button"
+                >
+                    {% csrf_token %}
+                    {{ benchmark_form.as_p }}
+                    <button type="submit" class="dev-button">A teljes készlet futtatása</button>
+                </form>
+
+            </div>
+
+            <div id="benchmark"></div>
+
+        </section>
+
+
+        <!-- KORÁBBI FUTÁSOK -->
+
+        <section class="dev-card">
+
+            <h2>Korábbi regressziós futások</h2>
+            <p>Minden sor egy teljes készlet-futtatás.</p>
+
+            <table class="dev-table">
+                <thead>
+                    <tr>
+                        <th>Mikor</th>
+                        <th>Modell</th>
+                        <th>Prompt</th>
+                        <th class="dev-number">Egyezés</th>
+                        <th class="dev-number">Átlagos eltérés</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for run in benchmark_runs %}
+                        <tr>
+                            <td>{{ run.created_at|date:"m.d. H:i" }}</td>
+                            <td>{{ run.model_name|default:"–" }}</td>
+                            <td>{{ run.prompt_version|default:"–" }}</td>
+                            <td class="dev-number">{{ run.match_count }}/{{ run.case_count }}</td>
+                            <td class="dev-number">{{ run.mean_deviation|floatformat:3|default:"–" }}</td>
+                        </tr>
+                    {% empty %}
+                        <tr><td colspan="5" class="dev-empty">Még nem futott regresszió.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </section>
+
+    </main>
+
+</div>
+
+
+<script>
+    (function () {
+        const search = document.getElementById("task-search");
+        const list = document.getElementById("task-list");
+        const count = document.getElementById("task-count");
+
+        if (search === null || list === null) {
+            return;
+        }
+
+        const items = Array.from(list.querySelectorAll("li[data-haystack]"));
+
+        function show(text) {
+            const needle = text.trim().toLowerCase();
+            let visible = 0;
+
+            for (const item of items) {
+                const hit = needle === "" || item.dataset.haystack.includes(needle);
+
+                item.hidden = !hit;
+
+                if (hit) {
+                    visible += 1;
+                }
+            }
+
+            count.textContent = visible + " / " + items.length + " feladat";
+        }
+
+        search.addEventListener("input", function () {
+            show(search.value);
+        });
+
+        show("");
+    })();
+</script>
+
 {% endblock %}

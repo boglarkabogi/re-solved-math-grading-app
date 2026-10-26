@@ -1,0 +1,88 @@
+{% if empty %}
+
+    <p class="dev-empty">Nincs egyetlen teszteset sem. Tölts be előbb egy CSV-t.</p>
+
+{% else %}
+
+<div
+    id="benchmark-panel"
+    {% if remaining %}
+        hx-get="{% url 'devtools:benchmark-step' run.pk %}"
+        hx-trigger="load"
+        hx-target="#benchmark-panel"
+        hx-swap="outerHTML"
+    {% endif %}
+>
+
+    <div class="dev-progress-row">
+
+        <strong class="dev-number">{{ done }}/{{ run.case_count }}</strong>
+
+        <div class="dev-progress-bar">
+            <div
+                class="dev-progress-fill"
+                style="width: {% widthratio done run.case_count 100 %}%"
+            ></div>
+        </div>
+
+        <span class="dev-meta">
+            {% if remaining %}
+                fut… még {{ remaining }} eset
+            {% else %}
+                kész · egyezés: {{ run.match_count }}/{{ run.case_count }}
+                · átlagos eltérés: {{ run.mean_deviation|floatformat:3|default:"–" }}
+                {% if average_ms %}· átlag {{ average_ms|floatformat:0 }} ms{% endif %}
+            {% endif %}
+        </span>
+
+    </div>
+
+    <table class="dev-table">
+        <thead>
+            <tr>
+                <th>Teszteset</th>
+                <th>Elvárt</th>
+                <th>Kapott</th>
+                <th>Eltérés</th>
+                <th>Indoklás</th>
+                <th>Idő</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for result in results %}
+                <tr>
+                    <td>{{ result.case.label }}</td>
+                    <td class="dev-number">{{ result.expected_score }}</td>
+                    <td class="dev-number">
+                        {% if result.score is None %}
+                            <span class="dev-tag dev-tag--error">hiba</span>
+                        {% elif result.matches %}
+                            <span class="dev-tag dev-tag--match">{{ result.score }}</span>
+                        {% else %}
+                            <span class="dev-tag dev-tag--miss">{{ result.score }}</span>
+                        {% endif %}
+                    </td>
+                    <td class="dev-number">{{ result.deviation|default_if_none:"–" }}</td>
+                    <td class="dev-reason">
+                        {% if result.error %}
+                            {{ result.error }}
+                        {% else %}
+                            {{ result.reasoning|truncatechars:160 }}
+                        {% endif %}
+                    </td>
+                    <td class="dev-number">{{ result.duration_ms|default:"–" }} ms</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if not remaining %}
+        <p class="dev-meta" style="margin-top:12px">
+            A futás elmentve. Az esetenkénti válaszok az adminban nézhetők meg:
+            <a href="/admin/devtools/benchmarkresult/?run__id__exact={{ run.pk }}">eredmények</a>.
+        </p>
+    {% endif %}
+
+</div>
+
+{% endif %}

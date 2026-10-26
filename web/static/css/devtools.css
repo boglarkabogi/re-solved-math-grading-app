@@ -1,0 +1,514 @@
+/* ---------------------------------------------------------------------------
+   DEVELOPER PAGE
+
+   Same visual language as the student pages: white cards on a light page,
+   thin grey borders, one dark accent. Nothing decorative - this screen is for
+   reading numbers and long model answers side by side.
+   --------------------------------------------------------------------------- */
+
+:root {
+    --dev-ink: #101827;
+    --dev-line: #e5e7eb;
+    --dev-muted: #777777;
+    --dev-page: #f5f5f5;
+}
+
+.dev-page {
+    min-height: 100vh;
+
+    background: var(--dev-page);
+
+    color: var(--dev-ink);
+
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+.dev-main {
+    width: 100%;
+    max-width: 1600px;
+
+    margin: 0 auto;
+    padding: 32px 24px 64px;
+}
+
+
+/* HEADER */
+
+.dev-header {
+    display: flex;
+    align-items: baseline;
+
+    gap: 16px;
+
+    margin-bottom: 8px;
+}
+
+.dev-header h1 {
+    margin: 0;
+
+    font-size: 25px;
+}
+
+.dev-badge {
+    padding: 3px 8px;
+
+    background: var(--dev-ink);
+    color: #ffffff;
+
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.dev-lead {
+    margin: 0 0 24px;
+
+    max-width: 70ch;
+
+    color: var(--dev-muted);
+
+    font-size: 15x;
+    line-height: 1.6;
+}
+
+
+/* CARDS */
+
+.dev-card {
+    margin-bottom: 16px;
+    padding: 24px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--dev-line);
+}
+
+.dev-card > h2 {
+    margin: 0 0 4px;
+
+    font-size: 18px;
+}
+
+.dev-card > h2 + p {
+    margin: 0 0 18px;
+
+    color: var(--dev-muted);
+
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.dev-columns {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+
+    align-items: start;
+}
+
+.dev-stack {
+    display: flex;
+    flex-direction: column;
+
+    gap: 24px;
+}
+
+.dev-clickable {
+    cursor: pointer;
+}
+
+.dev-clickable:hover td {
+    background: #f7f7f7;
+}
+
+/* FORMS */
+
+.dev-form p {
+    margin: 0 0 16px;
+}
+
+.dev-form label {
+    display: block;
+
+    margin-bottom: 6px;
+
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dev-form input[type="text"],
+.dev-form input[type="number"],
+.dev-form input[type="file"],
+.dev-form textarea {
+    width: 100%;
+    padding: 10px 12px;
+
+    background: #ffffff;
+
+    border: 1px solid var(--dev-line);
+
+    font-family: inherit;
+    font-size: 15px;
+
+    box-sizing: border-box;
+}
+
+.dev-form textarea {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+
+    resize: vertical;
+}
+
+.dev-form input:focus,
+.dev-form textarea:focus {
+    outline: 2px solid var(--dev-ink);
+    outline-offset: -2px;
+}
+
+.dev-form .helptext {
+    display: block;
+
+    margin-top: 5px;
+
+    color: var(--dev-muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.dev-form ul.errorlist {
+    margin: 0 0 6px;
+    padding-left: 18px;
+
+    color: #b42318;
+
+    font-size: 13px;
+}
+
+.dev-form input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.dev-form input[type="checkbox"] + label,
+.dev-form label[for$="-replace_existing"],
+.dev-form label[for$="-save_as_benchmark_case"] {
+    display: inline;
+
+    text-transform: none;
+    letter-spacing: 0;
+}
+
+.dev-button {
+    padding: 11px 20px;
+
+    background: var(--dev-ink);
+    color: #ffffff;
+
+    border: none;
+    cursor: pointer;
+
+    font-family: inherit;
+    font-size: 15px;
+}
+
+.dev-button:hover {
+    background: #000000;
+}
+
+.dev-button[disabled] {
+    opacity: 0.5;
+    cursor: wait;
+}
+
+.dev-button--quiet {
+    background: #ffffff;
+    color: var(--dev-ink);
+
+    border: 1px solid var(--dev-line);
+}
+
+
+/* TASK PICKER */
+
+.dev-search {
+    width: 100%;
+    padding: 10px 12px;
+
+    border: 1px solid var(--dev-line);
+
+    font-family: inherit;
+    font-size: 15px;
+
+    box-sizing: border-box;
+}
+
+.dev-task-list {
+    margin: 12px 0 0;
+    padding: 0;
+
+    max-height: 320px;
+    overflow-y: auto;
+
+    border: 1px solid var(--dev-line);
+
+    list-style: none;
+}
+
+.dev-task-list li {
+    border-bottom: 1px solid var(--dev-line);
+}
+
+.dev-task-list li:last-child {
+    border-bottom: none;
+}
+
+.dev-task-list a {
+    display: block;
+
+    padding: 10px 14px;
+
+    color: var(--dev-ink);
+    text-decoration: none;
+}
+
+.dev-task-list a:hover {
+    background: #f7f7f7;
+}
+
+.dev-task-code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.dev-task-topic {
+    margin-left: 8px;
+
+    color: var(--dev-muted);
+
+    font-size: 12px;
+}
+
+.dev-task-text {
+    display: block;
+
+    margin-top: 3px;
+
+    color: var(--dev-muted);
+
+    font-size: 13px;
+
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+}
+
+.dev-empty {
+    padding: 14px;
+
+    color: var(--dev-muted);
+
+    font-size: 15px;
+}
+
+
+/* TABLES */
+
+.dev-table {
+    width: 100%;
+
+    border-collapse: collapse;
+
+    font-size: 14px;
+}
+
+.dev-table th,
+.dev-table td {
+    padding: 9px 10px;
+
+    text-align: left;
+
+    border-bottom: 1px solid var(--dev-line);
+
+    vertical-align: top;
+}
+
+.dev-table th {
+    color: var(--dev-muted);
+
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+}
+
+.dev-table .dev-number {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+
+    text-align: right;
+
+    white-space: nowrap;
+}
+
+.dev-reason {
+    max-width: 44ch;
+
+    color: var(--dev-muted);
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+
+/* RESULT */
+
+.dev-result {
+    margin-top: 16px;
+}
+
+.dev-result-header {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+
+    gap: 12px;
+
+    margin-bottom: 14px;
+    padding-bottom: 14px;
+
+    border-bottom: 1px solid var(--dev-line);
+}
+
+.dev-score {
+    font-size: 34px;
+    font-weight: 600;
+
+    line-height: 1;
+}
+
+.dev-meta {
+    color: var(--dev-muted);
+
+    font-size: 13px;
+}
+
+.dev-tag {
+    padding: 3px 9px;
+
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.dev-tag--match {
+    background: #e7f5ec;
+    color: #15803d;
+}
+
+.dev-tag--miss {
+    background: #fdecec;
+    color: #b42318;
+}
+
+.dev-tag--error {
+    background: #101827;
+    color: #ffffff;
+}
+
+.dev-facts {
+    margin: 0 0 16px;
+    padding: 0;
+
+    list-style: none;
+
+    font-size: 14px;
+    line-height: 1.8;
+}
+
+.dev-facts code {
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 14px;
+}
+
+.dev-raw {
+    margin: 0;
+    padding: 16px;
+
+    background: #101010;
+    color: #ffffff;
+
+    font-family: ui-monospace, "SF Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+
+    white-space: pre-wrap;
+
+    max-height: 320px;
+    overflow: auto;
+}
+
+.dev-details {
+    margin-top: 12px;
+}
+
+.dev-details summary {
+    cursor: pointer;
+
+    font-size: 13px;
+}
+
+.dev-details[open] summary {
+    margin-bottom: 10px;
+}
+
+
+/* PROGRESS */
+
+.dev-progress-row {
+    display: flex;
+    align-items: center;
+
+    gap: 14px;
+
+    margin-bottom: 16px;
+}
+
+.dev-progress-bar {
+    flex: 1;
+    height: 6px;
+
+    background: var(--dev-line);
+}
+
+.dev-progress-fill {
+    width: 0;
+    height: 100%;
+
+    background: var(--dev-ink);
+}
+
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator,
+.htmx-request.htmx-indicator {
+    display: inline-block;
+}
+
+
+@media (max-width: 1100px) {
+
+    .dev-columns {
+        grid-template-columns: 1fr;
+    }
+
+    .dev-main {
+        padding: 24px 16px 48px;
+    }
+}

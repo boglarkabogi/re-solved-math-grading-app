@@ -51,3 +51,37 @@ class TrialRunForm(forms.Form):
         if data.get("save_as_benchmark_case") and data.get("expected_score") is None:
             self.add_error("expected_score", "Tesztesethez meg kell adni az elvárt pontot.")
         return data
+
+
+class BenchmarkCsvForm(forms.Form):
+    """Loading several cases at once, instead of typing them one by one."""
+
+    csv_file = forms.FileField(
+        label="CSV fájl",
+        help_text=(
+            "Oszlopok: label, task_code, task_text, correct_solution, solution_text, "
+            "expected_score, comment. Magyar nevek is mennek. Pontosvessző és vessző is jó "
+            "elválasztónak. A task_code megadásával a feladat és a helyes megoldás a "
+            "feladatbankból jön."
+        ),
+    )
+    replace_existing = forms.BooleanField(
+        label="A meglévő tesztesetek törlése betöltés előtt",
+        required=False,
+        help_text="Enélkül az új esetek a meglévők mellé kerülnek.",
+    )
+
+
+class BenchmarkRunForm(forms.Form):
+    """Starting a run over the whole case set."""
+
+    model_name = forms.CharField(
+        label="Modell",
+        required=False,
+        help_text="Üresen a LLM_GRADING_MODEL fut.",
+    )
+    prompt_version = forms.CharField(
+        label="A prompt verziója",
+        required=False,
+        help_text="Szabad szöveg, hogy később tudd, melyik prompttal mért a futás. Pl. v3-szigorubb.",
+    )

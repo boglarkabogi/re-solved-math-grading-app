@@ -64,3 +64,45 @@ class BenchmarkRun(models.Model):
 
     def __str__(self):
         return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} ({self.match_count}/{self.case_count})"
+
+
+class BenchmarkResult(models.Model):
+    """What one model said about one case in one run.
+
+    The aggregates on BenchmarkRun answer "did it get better"; these rows
+    answer "where did it get better", which is the part worth writing about.
+    """
+
+    run = models.ForeignKey(BenchmarkRun, on_delete=models.CASCADE, related_name="results")
+    case = models.ForeignKey(BenchmarkCase, on_delete=models.CASCADE, related_name="results")
+    expected_score = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2)
+    score = models.DecimalField("kapott pont", max_digits=3, decimal_places=2, null=True, blank=True)
+    reasoning = models.TextField("indoklás", blank=True)
+    confidence = models.PositiveSmallIntegerField("magabiztosság", null=True, blank=True)
+    raw_response = models.TextField("nyers válasz", blank=True)
+    error = models.TextField("hiba", blank=True)
+    duration_ms = models.PositiveIntegerField("futásidő (ms)", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "teszteset eredménye"
+        verbose_name_plural = "tesztesetek eredményei"
+        ordering = ["case_id"]
+        constraints = [
+            models.UniqueConstraint(fields=["run", "case"], name="one_result_per_case_per_run"),
+        ]
+
+    def __str__(self):
+        return f"{self.case} – kapott: {self.score}"
+
+    @property
+    def deviation(self):
+        """How far the model landed from the score a human would give."""
+        if self.score is None:
+            return None
+
+        return abs(self.score - self.expected_score)
+
+    @property
+    def matches(self):
+        return self.score is not None and self.score == self.expected_score
