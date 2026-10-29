@@ -1,0 +1,125 @@
+
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div class="resolve-dashboard">
+    <main class="resolve-dashboard-main">
+        <section class="resolve-dashboard-container">
+
+            <div class="resolve-dashboard-heading">
+                <h1>Admin Dashboard</h1>
+                <p>Manage your ReSolved platform.</p>
+            </div>
+
+            <div class="resolve-dashboard-sections">
+
+                {% for app in app_list %}
+                <div class="resolve-dashboard-section">
+
+                    <button
+                        type="button"
+                        class="resolve-section-toggle"
+                        aria-expanded="false"
+                        aria-controls="section-{{ app.app_label }}"
+                    >
+                        <span class="resolve-section-chevron">▾</span>
+
+                        <div class="resolve-section-info">
+                            <h2>{{ app.name }}</h2>
+                            <p>{{ app.models|length }} categories</p>
+                        </div>
+                    </button>
+
+                    <div
+                        class="resolve-section-panel"
+                        id="section-{{ app.app_label }}"
+                        hidden
+                    >
+                        <div class="resolve-dashboard-grid">
+
+                            {% for model in app.models %}
+                            <div class="resolve-dashboard-card">
+
+                                {% if model.admin_url %}
+                                <a
+                                    href="{{ model.admin_url }}"
+                                    class="resolve-card-title"
+                                >
+                                    {{ model.name }}
+                                </a>
+                                {% else %}
+                                <span class="resolve-card-title">
+                                    {{ model.name }}
+                                </span>
+                                {% endif %}
+
+                                <div class="resolve-card-actions">
+
+                                    {% if model.add_url %}
+                                    <a
+                                        href="{{ model.add_url }}"
+                                        class="resolve-card-icon"
+                                        title="Add {{ model.name }}"
+                                        aria-label="Add {{ model.name }}"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 5v14M5 12h14"/>
+                                        </svg>
+                                    </a>
+                                    {% endif %}
+
+                                    {% if model.admin_url %}
+                                    <a
+                                        href="{{ model.admin_url }}"
+                                        class="resolve-card-icon"
+                                        title="Edit {{ model.name }}"
+                                        aria-label="Edit {{ model.name }}"
+                                    >
+                                        <svg viewBox="0 0 24 24" aria-hidden="true">
+                                            <path d="M12 20h9"/>
+                                            <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L9 17l-4 1 1-4Z"/>
+                                        </svg>
+                                    </a>
+                                    {% endif %}
+
+                                </div>
+
+                            </div>
+                            {% endfor %}
+
+                        </div>
+                    </div>
+
+                </div>
+                {% endfor %}
+
+            </div>
+
+        </section>
+    </main>
+</div>
+{% endblock %}
+
+{% block footer %}
+    {{ block.super }}
+
+    <script>
+        document.querySelectorAll(".resolve-section-toggle").forEach((button) => {
+            button.addEventListener("click", () => {
+                const panel = document.getElementById(
+                    button.getAttribute("aria-controls")
+                );
+
+                if (!panel) return;
+
+                const isOpen = button.getAttribute("aria-expanded") === "true";
+
+                button.setAttribute("aria-expanded", String(!isOpen));
+                panel.hidden = isOpen;
+            });
+        });
+    </script>
+{% endblock %}

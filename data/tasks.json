@@ -1,0 +1,43 @@
+{
+  "tasks": [
+    {
+      "topic": "lnko",
+      "topic_name": "Legnagyobb közös osztó",
+      "code": "lnko-213-200",
+      "task_text": "Határozd meg a $\\gcd(213, 200)$ értékét az euklideszi algoritmussal!",
+      "correct_solution": "$\\gcd(213,200) = 1$.\n\n213 = 1·200 + 13\n200 = 15·13 + 5\n13 = 2·5 + 3\n5 = 1·3 + 2\n3 = 1·2 + 1\n2 = 2·1 + 0",
+      "use": "mindketto",
+      "comment": "",
+      "active": 1
+    },
+    {
+      "topic": "lnko",
+      "topic_name": "Legnagyobb közös osztó",
+      "code": "lnko-1071-462",
+      "task_text": "Határozd meg a $\\gcd(1071, 462)$ értékét!",
+      "correct_solution": "$\\gcd(1071,462) = 21$.\n\n1071 = 2·462 + 147\n462 = 3·147 + 21\n147 = 7·21 + 0",
+      "use": "orai",
+      "comment": "Csak órai számonkérésre.",
+      "active": 1
+    },
+    {
+      "topic": "kongruencia",
+      "topic_name": "Lineáris kongruencia",
+      "code": "kongr-17x-3-mod-29",
+      "task_text": "Oldd meg a $17x \\equiv 3 \\pmod{29}$ kongruenciát!",
+      "correct_solution": "$x \\equiv 7 \\pmod{29}$.\n\nA 17 inverze mod 29 a 12, mert 17·12 = 204 = 7·29 + 1.\nÍgy $x \\equiv 12 \\cdot 3 = 36 \\equiv 7 \\pmod{29}$.\nEllenőrzés: 17·7 = 119 = 4·29 + 3.",      "use": "mindketto",
+      "comment": "",
+      "active": 1
+    },
+    {
+      "topic": "polinom_lnko",
+      "topic_name": "Polinomok legnagyobb közös osztója",
+      "code": "poli-lnko-01",
+      "task_text": "Határozd meg az $f(x) = x^3 - 1$ és $g(x) = x^2 - 1$ polinomok legnagyobb közös osztóját $\\mathbb{Q}[x]$-ben!",
+      "correct_solution": "$\\gcd(f, g) = x - 1$.\n\n$x^3 - 1 = (x^2 - 1) \\cdot x + (x - 1)$\n$x^2 - 1 = (x - 1)(x + 1) + 0$",
+      "use": "mindketto",
+      "comment": "",
+      "active": 1
+    }
+  ]
+}

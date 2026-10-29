@@ -1,0 +1,572 @@
+{% extends "app_base.html" %}
+{% load static %}
+
+{% block cim %}Text Recognition | ReSolve{% endblock %}
+
+{% block page_css %}
+
+<link
+    rel="stylesheet"
+    href="{% static 'css/ocr_recognition.css' %}"
+>
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+>
+
+{% endblock %}
+
+
+{% block app_content %}
+
+<div class="ocr-page">
+
+    <main class="ocr-main">
+
+        <!-- TOPIC -->
+
+        <section class="ocr-topic">
+
+            <h1>
+                Topic: {{ lesson.display_name }}
+            </h1>
+
+            <p>
+                {{ lesson_number }}. Lesson · Due to: 2026.09.20
+            </p>
+
+        </section>
+
+
+        <!-- PROGRESS -->
+
+        <section class="ocr-progress">
+
+            <div class="ocr-step completed">
+
+                <div class="ocr-step-number completed-check">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                </div>
+
+                <span class="ocr-step-label">
+                    Generate Assignment
+                </span>
+
+            </div>
+
+
+            <div class="ocr-progress-line completed-line"></div>
+
+
+            <div class="ocr-step completed">
+
+                <div class="ocr-step-number completed-check">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                </div>
+
+                <span class="ocr-step-label">
+                    Upload Image
+                </span>
+
+            </div>
+
+
+            <div class="ocr-progress-line completed-line"></div>
+
+
+            <div class="ocr-step active">
+
+                <div class="ocr-step-number">
+                    3
+                </div>
+
+                <span class="ocr-step-label">
+                    Recognise Text
+                </span>
+
+            </div>
+
+
+            <div class="ocr-progress-line"></div>
+
+
+            <div class="ocr-step">
+
+                <div class="ocr-step-number">
+                    4
+                </div>
+
+                <span class="ocr-step-label">
+                    Get Evaluation
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- MAIN WORK AREA -->
+
+        <section class="ocr-work-area">
+
+
+            <!-- LEFT: UPLOADED IMAGE -->
+
+            <section class="ocr-solution-card">
+
+                <h2>
+                    Your solution
+                </h2>
+
+                <p class="ocr-description">
+                    Here you can see the preview of your uploaded image.
+                </p>
+
+
+                <div class="ocr-image-container">
+
+                    {% if ocr_attempt and ocr_attempt.image %}
+
+                        <img
+                            src="{{ ocr_attempt.image.url }}"
+                            class="ocr-solution-image"
+                            alt="Uploaded handwritten solution"
+                        >
+
+                    {% else %}
+
+                        <span class="ocr-no-image">
+                            No uploaded image available.
+                        </span>
+
+                    {% endif %}
+
+                </div>
+
+            </section>
+
+
+            <!-- RIGHT COLUMN -->
+
+            <div class="ocr-right-column">
+
+
+                <!-- RECOGNISED TEXT -->
+
+                <section class="ocr-recognition-card">
+
+                    <div class="ocr-card-heading">
+
+                        <div>
+                            <h2>
+                                Your recognised text
+                            </h2>
+                        </div>
+
+                        <span>
+                            Recognition: {{ attempt }}/3
+                        </span>
+
+                    </div>
+
+
+                    <p class="ocr-description">
+                        The recognised text will be evaluated, not the image itself.
+                        If the text does not match your handwritten solution,
+                        you can run recognition again or upload a clearer image.
+                    </p>
+
+
+                    <div class="recognised-text-box">
+
+                        {% if ocr_attempt.ocr_text %}
+
+                            <pre class="recognised-text">{{ ocr_attempt.ocr_text }}</pre>
+
+                        {% else %}
+
+                            <p class="recognition-placeholder">
+                                Recognition has not been run yet.
+                            </p>
+
+                        {% endif %}
+
+                    </div>
+
+
+                    <!-- MODEL PROGRESS -->
+
+                    <div
+                        class="ocr-model-progress"
+                        id="ocr-model-progress"
+                        hidden
+                    >
+
+                        <div class="ocr-model-progress-top">
+
+                            <span id="ocr-progress-label">
+                                Recognising handwriting...
+                            </span>
+
+                            <span id="ocr-progress-percent">
+                                0%
+                            </span>
+
+                        </div>
+
+
+                        <div class="ocr-model-progress-track">
+
+                            <div
+                                class="ocr-model-progress-fill"
+                                id="ocr-progress-fill"
+                            ></div>
+
+                        </div>
+
+
+                        <p id="ocr-progress-time">
+                            Approximately 25 seconds remaining
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- RETRY / RUN OCR -->
+
+                <section class="ocr-retry-card">
+
+                    <div class="ocr-retry-content">
+
+                        <div class="ocr-retry-icon">
+                            ⓘ
+                        </div>
+
+                        <div>
+
+                            {% if attempt == 0 %}
+
+                                <h3>
+                                    Ready for recognition
+                                </h3>
+
+                                <p>
+                                    Run the recognition model on your uploaded image.
+                                    You can run recognition up to 3 times on this image.
+                                </p>
+
+                            {% elif attempt == 1 %}
+
+                                <h3>
+                                    Recognition significantly incorrect?
+                                </h3>
+
+                                <p>
+                                    If the recognised text is incorrect,
+                                    you can retry recognition up to 2 more times.
+                                </p>
+
+                            {% elif attempt == 2 %}
+
+                                <h3>
+                                    Recognition significantly incorrect?
+                                </h3>
+
+                                <p>
+                                    If the recognised text is incorrect,
+                                    you can retry recognition 1 more time.
+                                </p>
+
+                            {% else %}
+
+                                <h3>
+                                    Recognition limit reached
+                                </h3>
+
+                                <p>
+                                    You have reached the maximum number
+                                    of recognition attempts for this image.
+                                </p>
+
+                            {% endif %}
+
+                        </div>
+
+                    </div>
+
+
+                    <div class="ocr-retry-actions">
+
+                        {% if attempt < 3 %}
+
+                            <form
+                                method="post"
+                                action="{% url 'ocr_recognition' group.id lesson.id %}"
+                                id="ocr-form"
+                                class="ocr-run-form"
+                            >
+
+                                {% csrf_token %}
+
+                                <button
+                                    type="submit"
+                                    class="ocr-retry-button"
+                                    id="ocr-run-button"
+                                >
+
+                                    {% if attempt == 0 %}
+                                        Get recognition →
+                                    {% else %}
+                                        Run recognition again →
+                                    {% endif %}
+
+                                </button>
+
+                            </form>
+
+                        <a
+                            href="{% url 'generated_assignment' group.id lesson.id %}"
+                            class="ocr-upload-another"
+                        >
+                            Upload another image
+                        </a>
+
+                        {% endif %}
+
+                    </div>
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- COMMENT -->
+
+        <form
+            method="post"
+            action="{% url 'evaluation' group.id lesson.id %}"
+            class="evaluation-form">   
+        {% csrf_token %}
+
+        <section class="ocr-comment-card">
+
+            <div class="ocr-comment-heading">
+
+                <span class="ocr-comment-icon">
+                    ▣
+                </span>
+
+                <h2>
+                    Comment
+                    <span>(optional)</span>
+                </h2>
+
+            </div>
+
+
+            <p>
+                In case there are some minimal differences between
+                the handwritten solution and the recognised text,
+                write the correction here.  
+            </p>
+
+
+            <textarea
+                name="student_note"
+                placeholder="E.g. 'In the second line it is a 7 not a 1...'">{{ submission.student_note }}</textarea>
+
+        </section>
+
+
+        <!-- NEXT -->
+
+        <section class="ocr-tip-card">
+
+            <div class="ocr-tip-content">
+
+                <div class="ocr-tip-icon">
+                    ?
+                </div>
+
+                <div>
+
+                    <h3>
+                        Tip
+                    </h3>
+
+                    <p>
+                        Check that the recognised text matches your handwritten
+                        solution before continuing to the evaluation.
+                    </p>
+
+                </div>
+
+            </div>
+
+            {% if ocr_attempt.ocr_text %}
+                <button
+                    type="submit"
+                    class="evaluation-button"
+                >
+                    Get your evaluation
+                    <span>→</span>
+                </button>
+
+            {% endif %}
+
+        </section>
+
+        </form>
+
+    </main>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script>
+    const ocrForm =
+        document.getElementById("ocr-form");
+
+    const progressBox =
+        document.getElementById("ocr-model-progress");
+
+    const progressFill =
+        document.getElementById("ocr-progress-fill");
+
+    const progressPercent =
+        document.getElementById("ocr-progress-percent");
+
+    const progressTime =
+        document.getElementById("ocr-progress-time");
+
+    const runButton =
+        document.getElementById("ocr-run-button");
+
+    const currentAttempt =
+        Number("{{ attempt }}");
+
+
+    function startProgress() {
+
+        if (progressBox) {
+            progressBox.hidden = false;
+        }
+
+        if (runButton) {
+            runButton.disabled = true;
+            runButton.textContent = "Recognising...";
+        }
+
+        const uploadButton = document.querySelector(".ocr-upload-another");
+
+        if (uploadButton) {
+            uploadButton.style.pointerEvents = "none";
+            uploadButton.style.opacity = "0.5";
+            uploadButton.style.cursor = "not-allowed";
+            uploadButton.setAttribute("aria-disabled", "true");
+        }
+
+        const estimatedSeconds = 25;
+        const startTime = Date.now();
+
+        setInterval(() => {
+
+            const elapsed =
+                (Date.now() - startTime) / 1000;
+
+            let progress =
+                (elapsed / estimatedSeconds) * 90;
+
+            progress =
+                Math.min(progress, 95);
+
+            const remaining =
+                Math.max(
+                    0,
+                    Math.round(
+                        estimatedSeconds - elapsed
+                    )
+                );
+
+            if (progressFill) {
+                progressFill.style.width =
+                    progress + "%";
+            }
+
+            if (progressPercent) {
+                progressPercent.textContent =
+                    Math.round(progress) + "%";
+            }
+
+            if (progressTime) {
+
+                if (remaining > 0) {
+                    progressTime.textContent =
+                        `Approximately ${remaining} seconds remaining`;
+                } else {
+                    progressTime.textContent =
+                        "Finishing recognition...";
+                }
+
+            }
+
+        }, 250);
+    }
+
+
+    if (ocrForm) {
+
+        ocrForm.addEventListener("submit", () => {
+            startProgress();
+        });
+
+
+        const params =
+            new URLSearchParams(window.location.search);
+
+        if (
+            params.get("autostart") === "1"
+            && currentAttempt < 3
+        ) {
+            startProgress();
+
+            setTimeout(() => {
+                ocrForm.submit();
+            }, 150);
+        }
+
+    }
+</script>
+
+{% endblock %}

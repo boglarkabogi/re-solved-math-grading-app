@@ -1,0 +1,819 @@
+.ocr-page {
+    width: 100%;
+    background: #ffffff;
+}
+
+
+/* MAIN */
+
+.ocr-main {
+    width: 100%;
+    max-width: 1120px;
+
+    box-sizing: border-box;
+
+    margin: 0 auto;
+    padding: 40px 48px;
+}
+
+
+/* TOPIC */
+
+.ocr-topic {
+    margin-bottom: 14px;
+}
+
+.ocr-topic h1 {
+    margin: 0 0 5px;
+
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.ocr-topic p {
+    margin: 0;
+
+    font-size: 9px;
+    color: #777777;
+}
+
+
+/* PROGRESS STEPS */
+
+.ocr-progress {
+    min-height: 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e5e7eb;
+
+    padding: 20px 100px;
+    margin-bottom: 12px;
+
+    background: #ffffff;
+}
+
+.ocr-step {
+    width: 110px;
+    flex-shrink: 0;
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    gap: 12px;
+
+    color: #a0a4aa;
+}
+
+.ocr-step-number {
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #e2e5e9;
+
+    background: #f1f3f5;
+
+    font-size: 11px;
+}
+
+.ocr-step-label {
+    font-size: 8px;
+
+    text-align: center;
+
+    white-space: nowrap;
+
+    color: #a0a4aa;
+}
+
+.ocr-step.active {
+    color: #101827;
+}
+
+.ocr-step.active .ocr-step-number {
+    border-color: #101827;
+
+    background: #101827;
+    color: #ffffff;
+}
+
+.ocr-step.active .ocr-step-label {
+    color: #101827;
+}
+
+.ocr-step.completed {
+    color: #101827;
+}
+
+.ocr-step.completed .ocr-step-number {
+    border-color: #101827;
+
+    background: #ffffff;
+    color: #101827;
+}
+
+.ocr-step.completed .ocr-step-label {
+    color: #101827;
+}
+
+.completed-check svg {
+    width: 16px;
+    height: 16px;
+}
+
+.ocr-progress-line {
+    height: 1px;
+
+    flex: 1;
+
+    min-width: 40px;
+    max-width: 100px;
+
+    margin-bottom: 26px;
+
+    background: #d5d8dc;
+}
+
+.ocr-progress-line.completed-line {
+    background: #101827;
+}
+
+
+/* WORK AREA */
+
+.ocr-work-area {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+
+    gap: 12px;
+
+    margin-bottom: 12px;
+
+    align-items: stretch;
+}
+
+
+/* COMMON CARDS */
+
+.ocr-solution-card,
+.ocr-recognition-card,
+.ocr-retry-card,
+.ocr-comment-card,
+.ocr-tip-card {
+    box-sizing: border-box;
+
+    border: 1px solid #e5e7eb;
+
+    background: #ffffff;
+}
+
+
+/* LEFT: SOLUTION */
+
+.ocr-solution-card {
+    min-width: 0;
+
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    padding: 24px;
+}
+
+.ocr-solution-card h2 {
+    margin: 0 0 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ocr-solution-card > p {
+    margin: 0 0 18px;
+
+    font-size: 9px;
+
+    color: #777777;
+}
+
+.ocr-image-container {
+    min-height: 170px;
+
+    flex: 1;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    border: 1px solid #eeeeee;
+
+    background: #f5f5f5;
+
+    overflow: hidden;
+}
+
+.ocr-solution-image {
+    display: block;
+
+    width: 100%;
+    height: 100%;
+
+    min-height: 170px;
+
+    object-fit: contain;
+}
+
+.ocr-no-image {
+    font-size: 9px;
+
+    color: #888888;
+}
+
+
+/* RIGHT COLUMN */
+
+.ocr-right-column {
+    min-width: 0;
+
+    height: 100%;
+
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+}
+
+
+/* OCR RESULT */
+
+.ocr-recognition-card {
+    padding: 24px;
+
+    flex: 1;
+}
+
+.ocr-card-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    gap: 16px;
+}
+
+.ocr-card-heading h2 {
+    margin: 0 0 10px;
+
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.ocr-card-heading span {
+    flex-shrink: 0;
+
+    font-size: 9px;
+
+    color: #555555;
+}
+
+.ocr-description {
+    margin: 0 0 18px;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #777777;
+}
+
+.recognised-text-box {
+    min-height: 50px;
+    max-height: 420px;
+
+    box-sizing: border-box;
+
+    padding: 18px;
+
+    background: #101010;
+    color: #ffffff;
+
+    font-family: monospace;
+    font-size: 10px;
+    line-height: 1.6;
+
+    overflow-y: auto;
+    overflow-x: auto;
+}
+
+.recognised-text {
+    margin: 0;
+
+    white-space: pre-wrap;
+
+    font: inherit;
+
+    color: inherit;
+}
+
+.recognition-placeholder {
+    margin: 0;
+}
+
+.recognised-text-box p {
+    margin: 0;
+}
+
+.recognised-math + .recognised-math {
+    margin-top: 5px;
+}
+
+
+/* MODEL PROGRESS */
+
+.ocr-model-progress {
+    margin-top: 18px;
+}
+
+.ocr-model-progress-top {
+    display: flex;
+    justify-content: space-between;
+
+    margin-bottom: 7px;
+
+    font-size: 9px;
+}
+
+.ocr-model-progress-track {
+    width: 100%;
+    height: 2px;
+
+    background: #e5e7eb;
+
+    overflow: hidden;
+}
+
+.ocr-model-progress-fill {
+    width: 0;
+    height: 100%;
+
+    background: #101010;
+
+    transition: width 0.25s linear;
+}
+
+.ocr-model-progress p {
+    margin: 7px 0 0;
+
+    font-size: 8px;
+
+    color: #777777;
+}
+
+
+/* CONFIDENCE */
+
+.confidence-row {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    margin-top: 18px;
+}
+
+.confidence-line {
+    height: 2px;
+
+    flex: 1;
+
+    background: #e5e7eb;
+}
+
+.confidence-fill {
+    width: 100%;
+    height: 100%;
+
+    background: #101827;
+}
+
+.confidence-row span {
+    font-size: 9px;
+}
+
+
+/* RETRY / OCR ACTION */
+
+.ocr-retry-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 20px;
+
+    padding: 18px;
+
+    flex-shrink: 0;
+}
+
+.ocr-retry-content {
+    min-width: 0;
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 12px;
+
+    flex: 1;
+}
+
+.ocr-retry-icon {
+    flex-shrink: 0;
+
+    font-size: 17px;
+}
+
+.ocr-retry-card h3 {
+    margin: 0 0 4px;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ocr-retry-card p {
+    margin: 0;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #666666;
+}
+
+
+/* OCR ACTION BUTTONS */
+
+.ocr-retry-actions {
+    display: flex;
+    align-items: center;
+
+    gap: 10px;
+
+    flex-shrink: 0;
+}
+
+.ocr-run-form {
+    margin: 0;
+}
+
+.ocr-retry-button,
+.ocr-upload-another {
+    min-height: 42px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    box-sizing: border-box;
+
+    padding: 0 16px;
+
+    border: 1px solid #1f1f1f;
+
+    font-family: inherit;
+    font-size: 9px;
+    line-height: 1;
+
+    text-decoration: none;
+
+    white-space: nowrap;
+
+    cursor: pointer;
+
+    transition:
+        background 0.15s ease,
+        color 0.15s ease,
+        opacity 0.15s ease;
+}
+
+.ocr-retry-button {
+    min-width: 130px;
+
+    background: #1f1f1f;
+    color: #ffffff;
+}
+
+.ocr-retry-button:hover {
+    background: #333333;
+}
+
+.ocr-retry-button:disabled {
+    cursor: wait;
+
+    opacity: 0.65;
+}
+
+.ocr-upload-another {
+    min-width: 135px;
+
+    background: #ffffff;
+    color: #1f1f1f;
+}
+
+.ocr-upload-another:hover {
+    background: #f5f5f5;
+}
+
+
+/* COMMENT */
+
+.ocr-comment-card {
+    padding: 20px;
+
+    margin-bottom: 12px;
+}
+
+.ocr-comment-heading {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+}
+
+.ocr-comment-heading h2 {
+    margin: 0;
+
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.ocr-comment-heading h2 span {
+    font-weight: 400;
+}
+
+.ocr-comment-card > p {
+    margin: 10px 0 12px;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #666666;
+}
+
+.ocr-comment-card textarea {
+    width: 100%;
+    min-height: 76px;
+
+    box-sizing: border-box;
+
+    padding: 12px;
+
+    resize: vertical;
+
+    border: 1px solid #e5e7eb;
+
+    outline: none;
+
+    font-family: inherit;
+    font-size: 10px;
+}
+
+.ocr-comment-card textarea:focus {
+    border-color: #111827;
+}
+
+.ocr-comment-card textarea::placeholder {
+    color: #b5b5b5;
+}
+
+
+/* TIP / NEXT */
+
+.ocr-tip-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 30px;
+
+    padding: 22px 24px;
+}
+
+.ocr-tip-content {
+    min-width: 0;
+
+    display: flex;
+    align-items: flex-start;
+
+    gap: 16px;
+}
+
+.ocr-tip-icon {
+    width: 34px;
+    height: 34px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #f5f5f5;
+
+    font-size: 11px;
+}
+
+.ocr-tip-card h3 {
+    margin: 0 0 7px;
+
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.ocr-tip-card p {
+    max-width: 700px;
+
+    margin: 0;
+
+    font-size: 9px;
+    line-height: 1.5;
+
+    color: #666666;
+}
+
+
+/* EVALUATION BUTTON */
+
+.evaluation-button {
+    min-width: 170px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    box-sizing: border-box;
+
+    padding: 0 18px;
+
+    border: none;
+
+    background: #1f1f1f;
+    color: #ffffff;
+
+    text-decoration: none;
+
+    font-family: inherit;
+    font-size: 9px;
+
+    cursor: pointer;
+
+    transition: background 0.15s ease;
+}
+
+.evaluation-button:hover {
+    background: #333333;
+}
+
+
+/* MOBILE */
+
+@media (max-width: 768px) {
+
+    .ocr-main {
+        padding: 24px 16px;
+    }
+
+    .ocr-topic h1 {
+        font-size: 18px;
+    }
+
+
+    /* PROGRESS */
+
+    .ocr-progress {
+        padding: 18px 10px;
+    }
+
+    .ocr-step {
+        width: 70px;
+    }
+
+    .ocr-step-number {
+        width: 30px;
+        height: 30px;
+    }
+
+    .ocr-step-label {
+        display: block;
+
+        font-size: 7px;
+
+        text-align: center;
+
+        white-space: normal;
+    }
+
+    .ocr-progress-line {
+        min-width: 10px;
+
+        margin-bottom: 32px;
+    }
+
+
+    /* WORK AREA */
+
+    .ocr-work-area {
+        grid-template-columns: 1fr;
+    }
+
+    .ocr-solution-card,
+    .ocr-recognition-card {
+        padding: 18px;
+    }
+
+    .ocr-solution-card {
+        height: auto;
+    }
+
+    .ocr-image-container {
+        min-height: 150px;
+    }
+
+    .ocr-solution-image {
+        min-height: 150px;
+        max-height: 300px;
+    }
+
+    .ocr-right-column {
+        height: auto;
+
+        gap: 12px;
+    }
+
+
+    /* RETRY */
+
+    .ocr-retry-card {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 16px;
+    }
+
+    .ocr-retry-actions {
+        width: 100%;
+
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 8px;
+    }
+
+    .ocr-run-form {
+        width: 100%;
+    }
+
+    .ocr-retry-button,
+    .ocr-upload-another {
+        width: 100%;
+
+        min-width: 0;
+    }
+
+
+    /* COMMENT */
+
+    .ocr-comment-card {
+        padding: 18px;
+    }
+
+
+    /* TIP */
+
+    .ocr-tip-card {
+        flex-direction: column;
+        align-items: stretch;
+
+        gap: 20px;
+
+        padding: 18px;
+    }
+
+    .evaluation-button {
+        width: 100%;
+    }
+}

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cim %}Log in | ReSolve{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="page">
+
+    <header class="header">
+        <div class="logo">RESOLVE</div>
+        <div class="language">HU</div>
+    </header>
+
+
+    <main class="login-wrapper">
+
+        <section class="login-card">
+
+            <h1>Log in</h1>
+
+            {% if form.errors %}
+                <div class="login-error">
+                    Invalid username/e-mail or password.
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="login-success">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form method="post" class="login-form">
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="username"
+                    placeholder="Username or e-mail"
+                >
+
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                >
+
+                <button type="submit">
+                    Log in
+                </button>
+
+            </form>
+
+            <p class="register-text">
+                Don’t have an account?
+                Register <a href="{% url 'register' %}">here.</a>
+            </p>
+
+        </section>
+
+    </main>
+
+
+    <footer class="footer">
+        <span>ReSolved © 2026</span>
+        <span>Adaptive AI Learning Platform</span>
+    </footer>
+
+</div>
+
+{% endblock %}

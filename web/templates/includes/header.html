@@ -1,0 +1,80 @@
+<header class="app-header">
+
+    <a href="{% url 'home' %}" class="app-logo">
+        RESOLVE
+    </a>
+
+    <nav class="desktop-nav">
+
+        <a
+            href="{% url 'home' %}"
+            class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"
+        >
+            Courses
+        </a>
+
+        <form
+            method="post"
+            action="{% url 'logout' %}"
+            class="logout-form"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="logout-button"
+            >
+                Logout
+            </button>
+        </form>
+
+    </nav>
+
+    <div class="header-actions">
+
+        <button
+            class="language-button"
+            type="button"
+        >
+            HU
+        </button>
+
+        <button
+            class="mobile-menu-button"
+            type="button"
+            id="mobile-menu-button"
+            aria-label="Open menu"
+            aria-expanded="false"
+        >
+            ☰
+        </button>
+
+    </div>
+
+    <nav
+        class="mobile-nav"
+        id="mobile-nav"
+    >
+
+        <a href="{% url 'home' %}">
+            Courses
+        </a>
+
+        <form
+            method="post"
+            action="{% url 'logout' %}"
+            class="mobile-logout-form"
+        >
+            {% csrf_token %}
+
+            <button
+                type="submit"
+                class="mobile-logout-button"
+            >
+                Logout
+            </button>
+        </form>
+
+    </nav>
+
+</header>

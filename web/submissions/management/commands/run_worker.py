@@ -32,5 +32,4 @@ class Command(BaseCommand):
                 continue
 
             self.stdout.write(f"[{timezone.now():%H:%M:%S}] feldolgozás: {beadas.azonosito}")
-            # TODO: motor.ocr.ocr_kep(...) és motor.grading.ertekel(...) bekötése
             time.sleep(options["interval"])

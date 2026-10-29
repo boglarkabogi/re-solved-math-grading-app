@@ -1,0 +1,24 @@
+
+{% extends "admin/base.html" %}
+{% load static %}
+
+{% block title %}
+    {{ title }} | ReSolved Admin
+{% endblock %}
+
+{% block dark-mode-vars %}{% endblock %}
+
+{% block extrastyle %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'css/admin_custom.css' %}">
+{% endblock %}
+
+{% block branding %}
+    <h1 id="site-name">
+        <a href="{% url 'admin:index' %}" class="resolve-admin-logo">
+            RESOLVE
+        </a>
+    </h1>
+{% endblock %}
+
+{% block nav-sidebar %}{% endblock %}

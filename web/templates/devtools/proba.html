@@ -1,7 +1,0 @@
-{% extends "base.html" %}
-{% block tartalom %}
-  <h1>Fejlesztői felület — értékelés OCR nélkül</h1>
-  <p>Itt lesz a próbaűrlap: feladat, helyes megoldás, megoldásszöveg, modellválasztó.</p>
-  <h2>Legutóbbi próbafuttatások</h2>
-  <ul>{% for f in utolsok %}<li>{{ f.letrehozva }} — {{ f.modell }} — {{ f.pont }}</li>{% empty %}<li>Még nincs.</li>{% endfor %}</ul>
-{% endblock %}

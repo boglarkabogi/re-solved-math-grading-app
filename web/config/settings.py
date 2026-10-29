@@ -1,13 +1,16 @@
 """Django-beállítások. Minden titok környezeti változóból jön."""
 
 import os
+import sys
 from pathlib import Path
 
 import dj_database_url
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent  # .../web
-PROJECT_DIR = BASE_DIR.parent  # a repó gyökere
+PROJECT_DIR = Path(__file__).resolve().parent.parent.parent
+if str(PROJECT_DIR) not in sys.path:
+    sys.path.insert(0, str(PROJECT_DIR))
 
 load_dotenv(PROJECT_DIR / ".env")
 
@@ -67,9 +70,9 @@ DATABASES = {
     )
 }
 
-AUTH_USER_MODEL = "accounts.Felhasznalo"
+AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "/belepes/"
-LOGIN_REDIRECT_URL = "/"
+LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/"
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -85,14 +88,14 @@ USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = "static/"
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+]
 STATIC_ROOT = PROJECT_DIR / "staticfiles"
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
     "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
 }
-
-MEDIA_URL = "media/"
-MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", PROJECT_DIR / "media"))
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
@@ -100,3 +103,12 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED", "1") == "1"
 
 EMAIL_BACKEND = os.environ.get("EMAIL_BACKEND", "django.core.mail.backends.console.EmailBackend")
+
+WHITENOISE_USE_FINDERS = DEBUG
+
+AUTHENTICATION_BACKENDS = [
+    "accounts.backends.UsernameOrEmailBackend",
+]
+
+MEDIA_URL = "/media/"
+MEDIA_ROOT = Path(os.environ.get("MEDIA_ROOT", PROJECT_DIR / "media"))

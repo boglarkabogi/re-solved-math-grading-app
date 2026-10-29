@@ -2,65 +2,107 @@ from django.conf import settings
 from django.db import models
 
 
-class ProbaFuttatas(models.Model):
-    """Egy kiértékelés a fejlesztői felületről, az OCR-lépés kihagyásával."""
+class TrialRun(models.Model):
+    """One grading run from the developer page, skipping the recognition step."""
 
-    futtatta = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
-    feladat_szoveg = models.TextField("feladat")
-    helyes_megoldas = models.TextField("helyes megoldás")
-    megoldas_szoveg = models.TextField("a kiértékelt megoldás")
-    hibatipus = models.CharField("generált hibatípus", max_length=32, blank=True)
-    modell = models.CharField("modell", max_length=120, blank=True)
+    run_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, on_delete=models.SET_NULL)
+    task_text = models.TextField("feladat")
+    correct_solution = models.TextField("helyes megoldás")
+    solution_text = models.TextField("a kiértékelt megoldás")
+    model_name = models.CharField("modell", max_length=120, blank=True)
     prompt = models.TextField("az elküldött prompt", blank=True)
-    nyers_valasz = models.TextField("nyers válasz", blank=True)
-    pont = models.DecimalField(max_digits=3, decimal_places=2, null=True, blank=True)
-    indoklas = models.TextField(blank=True)
-    magabiztossag = models.PositiveSmallIntegerField(null=True, blank=True)
-    futasido_ms = models.PositiveIntegerField(null=True, blank=True)
-    letrehozva = models.DateTimeField(auto_now_add=True)
+    raw_response = models.TextField("nyers válasz", blank=True)
+    score = models.DecimalField("pont", max_digits=3, decimal_places=2, null=True, blank=True)
+    reasoning = models.TextField("indoklás", blank=True)
+    confidence = models.PositiveSmallIntegerField("magabiztosság", null=True, blank=True)
+    duration_ms = models.PositiveIntegerField("futásidő (ms)", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "próbafuttatás"
         verbose_name_plural = "próbafuttatások"
-        ordering = ["-letrehozva"]
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.letrehozva:%Y.%m.%d. %H:%M} – {self.modell} – {self.pont}"
+        return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} – {self.score}"
 
 
-class Teszteset(models.Model):
-    """A regressziós készlet egy eleme: mire mennyi pont járna."""
+class BenchmarkCase(models.Model):
+    """One item of the regression set: the score this solution should get."""
 
-    cimke = models.CharField("címke", max_length=120, blank=True)
-    feladat_szoveg = models.TextField("feladat")
-    helyes_megoldas = models.TextField("helyes megoldás")
-    megoldas_szoveg = models.TextField("a diák megoldása")
-    elvart_pont = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2)
-    megjegyzes = models.TextField(blank=True)
-    letrehozva = models.DateTimeField(auto_now_add=True)
+    label = models.CharField("címke", max_length=120, blank=True)
+    task_text = models.TextField("feladat")
+    correct_solution = models.TextField("helyes megoldás")
+    solution_text = models.TextField("a diák megoldása")
+    expected_score = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2)
+    comment = models.TextField("megjegyzés", blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "teszteset"
         verbose_name_plural = "tesztesetek"
+        ordering = ["pk"]
 
     def __str__(self):
-        return f"{self.cimke or 'teszteset'} (elvárt: {self.elvart_pont})"
+        return f"{self.label or 'teszteset'} (elvárt: {self.expected_score})"
 
 
-class RegressziosFutas(models.Model):
-    """A teljes tesztkészlet végigfuttatása egy modellel."""
+class BenchmarkRun(models.Model):
+    """Running the whole regression set with one model."""
 
-    modell = models.CharField(max_length=120)
-    prompt_verzio = models.CharField(max_length=40, blank=True)
-    esetek_szama = models.PositiveIntegerField(default=0)
-    egyezes = models.PositiveIntegerField(default=0)
-    atlagos_elteres = models.FloatField(null=True, blank=True)
-    letrehozva = models.DateTimeField(auto_now_add=True)
+    model_name = models.CharField("modell", max_length=120)
+    prompt_version = models.CharField("prompt verziója", max_length=40, blank=True)
+    case_count = models.PositiveIntegerField("esetek száma", default=0)
+    match_count = models.PositiveIntegerField("egyezések száma", default=0)
+    mean_deviation = models.FloatField("átlagos eltérés", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "regressziós futás"
         verbose_name_plural = "regressziós futások"
-        ordering = ["-letrehozva"]
+        ordering = ["-created_at"]
 
     def __str__(self):
-        return f"{self.letrehozva:%Y.%m.%d. %H:%M} – {self.modell} ({self.egyezes}/{self.esetek_szama})"
+        return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} ({self.match_count}/{self.case_count})"
+
+
+class BenchmarkResult(models.Model):
+    """What one model said about one case in one run.
+
+    The aggregates on BenchmarkRun answer "did it get better"; these rows
+    answer "where did it get better", which is the part worth writing about.
+    """
+
+    run = models.ForeignKey(BenchmarkRun, on_delete=models.CASCADE, related_name="results")
+    case = models.ForeignKey(BenchmarkCase, on_delete=models.CASCADE, related_name="results")
+    expected_score = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2)
+    score = models.DecimalField("kapott pont", max_digits=3, decimal_places=2, null=True, blank=True)
+    reasoning = models.TextField("indoklás", blank=True)
+    confidence = models.PositiveSmallIntegerField("magabiztosság", null=True, blank=True)
+    raw_response = models.TextField("nyers válasz", blank=True)
+    error = models.TextField("hiba", blank=True)
+    duration_ms = models.PositiveIntegerField("futásidő (ms)", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "teszteset eredménye"
+        verbose_name_plural = "tesztesetek eredményei"
+        ordering = ["case_id"]
+        constraints = [
+            models.UniqueConstraint(fields=["run", "case"], name="one_result_per_case_per_run"),
+        ]
+
+    def __str__(self):
+        return f"{self.case} – kapott: {self.score}"
+
+    @property
+    def deviation(self):
+        """How far the model landed from the score a human would give."""
+        if self.score is None:
+            return None
+
+        return abs(self.score - self.expected_score)
+
+    @property
+    def matches(self):
+        return self.score is not None and self.score == self.expected_score

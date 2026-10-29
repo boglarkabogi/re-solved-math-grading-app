@@ -1,0 +1,230 @@
+{% extends "app_base.html" %}
+{% load static %}
+
+{% block cim %}Home | ReSolve{% endblock %}
+
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/home.css' %}">
+{% endblock %}
+
+
+{% block app_content %}
+
+<div class="home-page">
+
+    <main class="home-main">
+
+        <section class="courses-section">
+
+            <div class="courses-heading">
+
+                <h1>Your courses</h1>
+
+                <p>
+                    Join a course using the code provided by your teacher.
+                </p>
+
+            </div>
+
+
+            {% if messages %}
+
+                <div class="course-messages">
+
+                    {% for message in messages %}
+
+                        <div class="course-message {{ message.tags }}">
+                            {{ message }}
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+
+            <form method="post" class="join-course-form">
+
+                {% csrf_token %}
+
+                <input
+                    type="text"
+                    name="invite_code"
+                    placeholder="Course code"
+                    maxlength="16"
+                    autocomplete="off"
+                    required
+                >
+
+                <button type="submit">
+                    Add course
+                </button>
+
+            </form>
+
+
+            {% if memberships %}
+
+                <div class="course-list">
+
+                    {% for membership in memberships %}
+
+                        <div class="course-card-wrapper">
+
+                            <div class="course-card">
+
+                                <button
+                                    type="button"
+                                    class="course-toggle"
+                                    data-course="{{ membership.group.id }}"
+                                    aria-expanded="false"
+                                >
+
+                                    <span class="course-chevron">
+                                        ▾
+                                    </span>
+
+                                    <div class="course-card-info">
+
+                                        <h2>
+                                            {{ membership.group.course.name }}
+                                        </h2>
+
+                                        <p>
+                                            {{ membership.group.name }}
+                                            ·
+                                            {{ membership.group.course.term }}
+                                        </p>
+
+                                    </div>
+
+                                    <span class="course-role">
+                                        {% if membership.is_teacher %}
+                                            Teacher
+                                        {% else %}
+                                            Student
+                                        {% endif %}
+                                    </span>
+
+                                </button>
+
+
+                                <form
+                                    method="post"
+                                    action="{% url 'leave_course' membership.group.id %}"
+                                    class="leave-course-form"
+                                    onsubmit="return confirm('Are you sure you want to leave this course?');"
+                                >
+                                    {% csrf_token %}
+
+                                    <button
+                                        type="submit"
+                                        class="leave-course-button"
+                                        aria-label="Leave course"
+                                        title="Leave course"
+                                    >
+
+                                        <svg
+                                            viewBox="0 0 24 24"
+                                            aria-hidden="true"
+                                        >
+                                            <path
+                                                d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v5M14 11v5"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                stroke-width="1.5"
+                                                stroke-linecap="round"
+                                                stroke-linejoin="round"
+                                            />
+                                        </svg>
+
+                                    </button>
+
+                                </form>
+
+                            </div>
+
+
+                            <div
+                                class="lesson-panel"
+                                id="course-{{ membership.group.id }}"
+                            >
+
+                                <div class="lesson-grid">
+
+                                    {% for lesson in membership.group.orak.all %}
+
+                                        <a
+                                            href="{% url 'lesson_detail' membership.group.id lesson.id %}"
+                                            class="lesson-card"
+                                        >
+
+                                            <span class="lesson-number">
+                                                Lesson {{ forloop.counter|stringformat:"02d" }}
+                                            </span>
+
+                                            <h3>
+                                                {{ lesson.display_name }}
+                                            </h3>
+
+                                            <span class="lesson-status {{ lesson.student_status.css }}">
+                                                {{ lesson.student_status.label }}
+                                            </span>
+
+                                        </a>
+
+                                    {% empty %}
+
+                                        <div class="no-lessons">
+                                            No lessons available yet.
+                                        </div>
+
+                                    {% endfor %}
+
+                                </div>
+
+                            </div>
+
+                        </div>
+
+                    {% endfor %}
+
+                </div>
+
+            {% endif %}
+
+        </section>
+
+    </main>
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script>
+    document.querySelectorAll(".course-toggle").forEach((button) => {
+
+        button.addEventListener("click", () => {
+
+            const courseId = button.dataset.course;
+            const panel = document.getElementById(`course-${courseId}`);
+
+            if (!panel) {
+                return;
+            }
+
+            panel.classList.toggle("open");
+
+            const isOpen = panel.classList.contains("open");
+
+            button.setAttribute("aria-expanded", isOpen);
+        });
+
+    });
+</script>
+
+{% endblock %}

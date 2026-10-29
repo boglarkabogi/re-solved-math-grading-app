@@ -1,0 +1,96 @@
+{% if form_errors %}
+
+    <div class="dev-result-header">
+        <strong>Az űrlap hibás</strong>
+    </div>
+
+    <ul class="dev-facts">
+        {% for field, errors in form_errors.items %}
+            <li><code>{{ field }}</code>: {{ errors|join:", " }}</li>
+        {% endfor %}
+    </ul>
+
+{% elif error %}
+
+    <div class="dev-result-header">
+        <strong>Nem sikerült az értékelés</strong>
+        <span class="dev-tag dev-tag--error">hiba</span>
+    </div>
+
+    <p class="dev-meta">{{ error }}</p>
+
+    <p class="dev-meta">
+        Gyakori okok: hiányzik vagy lejárt az <code>LLM_API_KEY</code>, a megadott modellnév
+        már nem létezik a szolgáltatónál, vagy a modell nem JSON-t válaszolt. A futtatás így is
+        elmentődött:
+        <a href="/admin/devtools/trialrun/{{ run.pk }}/change/">megnyitás az adminban</a>.
+    </p>
+
+    <details class="dev-details">
+        <summary>A modell nyers válasza</summary>
+        <pre class="dev-raw">{{ run.raw_response|default:"(üres)" }}</pre>
+    </details>
+
+{% else %}
+
+    <div class="dev-result-header">
+
+        <span class="dev-score">{{ result.pont }}</span>
+
+        {% if expected_score is not None %}
+            {% if matches_expected %}
+                <span class="dev-tag dev-tag--match">egyezik az elvárttal</span>
+            {% else %}
+                <span class="dev-tag dev-tag--miss">elvárt: {{ expected_score }}</span>
+            {% endif %}
+        {% endif %}
+
+        <span class="dev-meta">
+            magabiztosság: {{ result.magabiztossag|default:"–" }}
+            · {{ run.duration_ms }} ms
+            · {{ run.model_name }}
+            {% if stored %}· korábbi futtatás: {{ run.created_at|date:"m.d. H:i" }}{% endif %}
+        </span>
+
+    </div>
+
+    <p>{{ result.indoklas }}</p>
+
+    <ul class="dev-facts">
+        <li>a diák végeredménye: <code>{{ result.diak_vegeredmenye|default:"–" }}</code></li>
+        <li>összefoglalva: {{ result.diak_megoldasa_osszefoglalva|default:"–" }}</li>
+
+        {% if result.ertelmezheto is False %}
+            <li><span class="dev-tag dev-tag--miss">a modell szerint nem értelmezhető</span></li>
+        {% endif %}
+
+        {% if result.ocr_hiba_gyanu %}
+            <li>
+                <span class="dev-tag dev-tag--miss">felismerési hiba gyanúja</span>
+                {{ result.ocr_hiba_indok|default:"–" }}
+            </li>
+        {% endif %}
+
+        {% if result.pont_kerekitve %}
+            <li>
+                <span class="dev-tag dev-tag--miss">a modell kilógott a pontskáláról</span>
+                a motor igazította a megengedett öt érték egyikére
+            </li>
+        {% endif %}
+    </ul>
+
+    {% if benchmark_case %}
+        <p class="dev-meta">Tesztesetként elmentve: <em>{{ benchmark_case.label }}</em></p>
+    {% endif %}
+
+    <details class="dev-details">
+        <summary>Az elküldött prompt</summary>
+        <pre class="dev-raw">{{ run.prompt }}</pre>
+    </details>
+
+    <details class="dev-details">
+        <summary>A modell nyers válasza</summary>
+        <pre class="dev-raw">{{ run.raw_response }}</pre>
+    </details>
+
+{% endif %}

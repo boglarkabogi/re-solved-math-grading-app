@@ -1,0 +1,444 @@
+{% extends "app_base.html" %}
+{% load static %}
+
+{% block cim %}{{ lesson.display_name }} | ReSolve{% endblock %}
+
+{% block page_css %}
+<link
+    rel="stylesheet"
+    href="{% static 'css/generated_assignment.css' %}"
+>
+{% endblock %}
+
+
+{% block app_content %}
+
+<div class="generated-page">
+
+    <main class="generated-main">
+
+        <!-- TOPIC -->
+
+        <section class="generated-topic">
+
+            <h1>
+                Topic: {{ lesson.display_name }}
+            </h1>
+
+            <p>
+                {{ lesson_number }}. Lesson · Due to: 2026.09.20
+            </p>
+
+        </section>
+
+
+        <!-- PROGRESS -->
+
+        <section class="generated-progress">
+
+            <div class="generated-step completed">
+
+                <div class="generated-step-number completed-check">
+
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+
+                </div>
+
+                <span>
+                    Generate Assignment
+                </span>
+
+            </div>
+
+
+            <div class="generated-progress-line completed-line"></div>
+
+
+            <div class="generated-step active">
+
+                <div class="generated-step-number">
+                    2
+                </div>
+
+                <span>
+                    Upload Image
+                </span>
+
+            </div>
+
+
+            <div class="generated-progress-line"></div>
+
+
+            <div class="generated-step">
+
+                <div class="generated-step-number">
+                    3
+                </div>
+
+                <span>
+                    Recognise Text
+                </span>
+
+            </div>
+
+
+            <div class="generated-progress-line"></div>
+
+
+            <div class="generated-step">
+
+                <div class="generated-step-number">
+                    4
+                </div>
+
+                <span>
+                    Get Evaluation
+                </span>
+
+            </div>
+
+        </section>
+
+
+        <!-- ONE FORM FOR IMAGE + OCR BUTTON -->
+
+        <form
+            method="post"
+            enctype="multipart/form-data"
+            class="generated-upload-form"
+        >
+
+            {% csrf_token %}
+
+
+            <!-- WORK AREA -->
+
+            <section class="generated-work-area">
+
+
+                <!-- ASSIGNMENT -->
+
+                <section class="generated-assignment-card">
+
+                    <div class="generated-card-heading">
+
+                        <div>
+
+                            <h2>
+                                Your assignment
+                            </h2>
+
+                            <p>
+                                You can only generate one assignment per topic.
+                            </p>
+
+                        </div>
+
+                        <span>
+                            Generated: 1/1
+                        </span>
+
+                    </div>
+
+
+                    <div class="generated-problem">
+
+                        <p class="generated-problem-text">
+                            {{ assignment.task.task_text }}
+                        </p>
+
+                    </div>
+
+                </section>
+
+
+                <!-- IMAGE UPLOAD -->
+
+                <section class="generated-upload-card">
+
+                    <h2>
+                        Upload your solution
+                    </h2>
+
+                    <p class="generated-upload-description">
+                        Submit an image of your handwritten solution.
+                    </p>
+
+
+                    <label
+                        class="generated-drop-zone"
+                        for="solution-image"
+                    >
+
+                        <input
+                            type="file"
+                            id="solution-image"
+                            name="solution_image"
+                            accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                            required
+                            hidden
+                        >
+
+
+                        <div id="upload-placeholder">
+
+                            <div class="generated-file-icon">
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                    <path
+                                        d="M7 3h7l4 4v14H7z"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linejoin="round"
+                                    />
+
+                                    <path
+                                        d="M14 3v5h5"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.4"
+                                        stroke-linejoin="round"
+                                    />
+
+                                </svg>
+
+                            </div>
+
+
+                            <strong>
+                                Drag & drop your image here
+                            </strong>
+
+                            <span>
+                                or tap to browse files
+                            </span>
+
+                        </div>
+
+
+                        <div
+                            class="preview-wrapper"
+                            id="preview-wrapper"
+                        >
+
+                            <img
+                                id="solution-preview"
+                                class="solution-preview"
+                                alt="Selected solution"
+                            >
+
+
+                            <button
+                                type="button"
+                                class="zoom-button"
+                                id="zoom-button"
+                                aria-label="View image"
+                            >
+
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+
+                                    <circle
+                                        cx="11"
+                                        cy="11"
+                                        r="6"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                    />
+
+                                    <path
+                                        d="M16 16L21 21"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="1.6"
+                                        stroke-linecap="round"
+                                    />
+
+                                </svg>
+
+                            </button>
+
+                        </div>
+
+                    </label>
+
+
+                    <p class="generated-file-info">
+                        JPG, JPEG or PNG. Maximum 20 MB.
+                    </p>
+
+                </section>
+
+            </section>
+
+
+            <!-- TIP + SUBMIT -->
+
+            <section class="generated-tip">
+
+                <div class="generated-tip-content">
+
+                    <div class="generated-tip-icon">
+                        ?
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Tip
+                        </h3>
+
+                        <p>
+                            You will see the recognised text only after
+                            you upload an image and start the recognition.
+                            You can run the recognition up to three times
+                            per image.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="submit"
+                    class="recognise-button"
+                >
+                    Recognise Text
+                    <span>→</span>
+                </button>
+
+            </section>
+
+        </form>
+
+    </main>
+
+</div>
+
+
+<!-- IMAGE MODAL -->
+
+<div class="image-modal" id="image-modal">
+
+    <button
+        type="button"
+        class="image-modal-close"
+        id="image-modal-close"
+        aria-label="Close image"
+    >
+        ×
+    </button>
+
+    <img
+        id="modal-image"
+        class="modal-image"
+        alt="Full size solution"
+    >
+
+</div>
+
+{% endblock %}
+
+
+{% block page_scripts %}
+
+<script>
+
+    const fileInput =
+        document.getElementById("solution-image");
+
+    const preview =
+        document.getElementById("solution-preview");
+
+    const placeholder =
+        document.getElementById("upload-placeholder");
+
+    const previewWrapper =
+        document.getElementById("preview-wrapper");
+
+    const zoomButton =
+        document.getElementById("zoom-button");
+
+    const imageModal =
+        document.getElementById("image-modal");
+
+    const modalImage =
+        document.getElementById("modal-image");
+
+    const modalClose =
+        document.getElementById("image-modal-close");
+
+
+    if (fileInput) {
+        fileInput.addEventListener("change", () => {
+
+            const file = fileInput.files[0];
+
+            if (!file) {
+                return;
+            }
+
+            const imageUrl = URL.createObjectURL(file);
+
+            preview.src = imageUrl;
+            modalImage.src = imageUrl;
+
+            placeholder.style.display = "none";
+            previewWrapper.style.display = "block";
+        });
+    }
+
+
+    if (zoomButton) {
+        zoomButton.addEventListener("click", (event) => {
+
+            event.preventDefault();
+            event.stopPropagation();
+
+            imageModal.classList.add("open");
+        });
+    }
+
+
+    if (modalClose) {
+        modalClose.addEventListener("click", () => {
+            imageModal.classList.remove("open");
+        });
+    }
+
+
+    if (imageModal) {
+        imageModal.addEventListener("click", (event) => {
+
+            if (event.target === imageModal) {
+                imageModal.classList.remove("open");
+            }
+
+        });
+    }
+
+
+    document.addEventListener("keydown", (event) => {
+
+        if (event.key === "Escape" && imageModal) {
+            imageModal.classList.remove("open");
+        }
+
+    });
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,373 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block cim %}Evaluation | ReSolve{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{% static 'css/evaluation.css' %}">
+
+<link
+    rel="stylesheet"
+    href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css"
+>
+{% endblock %}
+
+{% block tartalom %}
+
+<div class="evaluation-page">
+
+    <!-- HEADER -->
+    <header class="evaluation-header">
+
+        <div class="evaluation-logo">RESOLVE</div>
+
+        <nav class="evaluation-desktop-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
+        </nav>
+
+        <div class="evaluation-header-actions">
+            <button class="evaluation-language-button">HU</button>
+
+            <button
+                class="evaluation-mobile-menu-button"
+                id="evaluation-mobile-menu-button"
+                type="button"
+                aria-label="Open menu"
+                aria-expanded="false"
+            >
+                ☰
+            </button>
+        </div>
+
+        <nav class="evaluation-mobile-nav" id="evaluation-mobile-nav">
+            <a href="{% url 'home' %}">Home</a>
+            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
+        </nav>
+
+    </header>
+
+
+    <main class="evaluation-main{% if evaluation %} evaluation-main--done{% endif %}">
+
+        <!-- TOPIC -->
+        <section class="evaluation-topic">
+            <h1>Topic: {{ lesson.display_name }}</h1>
+            <p>{{ lesson_number }}. Lesson</p>
+        </section>
+
+
+        <!-- PROGRESS -->
+        <section class="evaluation-progress">
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Generate Assignment</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Upload Image</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step completed">
+                <div class="evaluation-step-number completed-check">
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path
+                            d="M5 12.5l4 4L19 7"
+                            fill="none"
+                            stroke="currentColor"
+                            stroke-width="1.6"
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                        />
+                    </svg>
+                </div>
+                <div class="evaluation-step-label">Recognise Text</div>
+            </div>
+
+            <div class="evaluation-progress-line completed-line"></div>
+
+            <div class="evaluation-step active">
+                <div class="evaluation-step-number">4</div>
+                <div class="evaluation-step-label">Get Evaluation</div>
+            </div>
+
+        </section>
+
+
+        <!-- TOP CONTENT -->
+        <section class="evaluation-work-area">
+
+            <!-- LEFT: SOLUTION -->
+            <section class="evaluation-solution-card">
+
+                <h2>Your solution</h2>
+
+                <p>
+                    Here you can see the preview of the uploaded image.
+                </p>
+
+                <div class="evaluation-image-container">
+
+                    {% if ocr_attempt.image %}
+                        <img src="{{ ocr_attempt.image.url }}" alt="Uploaded handwritten solution">
+                    {% else %}
+                        <div class="evaluation-image-placeholder">No uploaded image available.</div>
+                    {% endif %}
+
+                </div>
+
+                {% if ocr_attempt.image %}
+                    <a
+                        class="evaluation-image-link"
+                        href="{{ ocr_attempt.image.url }}"
+                        target="_blank"
+                        rel="noopener"
+                    >
+                        Open the full size image →
+                    </a>
+                {% endif %}
+
+            </section>
+
+
+            <!-- RIGHT -->
+            <div class="evaluation-right-column">
+
+                <section class="evaluation-recognition-card">
+
+                    <div class="evaluation-card-heading">
+
+                        <h2>Your recognised text</h2>
+
+                        <span>Recognition: {{ submission.ocr_run_count }}/3</span>
+
+                    </div>
+
+                    <p class="evaluation-recognition-description">
+                        The recognised text will be evaluated, not the image itself.
+                        If the text does not match your handwritten solution,
+                        upload a clearer image and try again.
+                    </p>
+
+                    <div class="evaluation-recognised-text">{{ ocr_attempt.ocr_text }}</div>
+
+                    {% if evaluation.confidence is not None %}
+                    <div class="evaluation-confidence-row">
+                        <span>Model confidence</span>
+                        <div class="evaluation-confidence-line">
+                            <div 
+                            class="evaluation-confidence-fill"
+                            style="width: {{ evaluation.confidence }}%">
+                        </div>
+                        </div>
+
+                        <span>{{ evaluation.confidence }}%</span>
+
+                    </div>
+                    {% endif %}
+
+                </section>
+
+            </div>
+
+        </section>
+
+
+        <!-- RESULT AREA -->
+        {% if evaluation %}
+        <section class="evaluation-results-grid">
+
+            <!-- SCORE -->
+            <article class="evaluation-result-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▣</div>
+
+                    <div>
+                        <h2>Evaluation Result</h2>
+                        <p>
+                            Your solution has been evaluated based
+                            on the recognised text.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="evaluation-score-section">
+
+                    <span class="evaluation-score-label">Score</span>
+
+                    <div class="evaluation-score">
+                        {{ evaluation.final_score }}<span>/1</span>
+                    </div>
+
+                    <div class="evaluation-score-bar">
+                        <div 
+                        class="evaluation-score-fill"
+                        style="width: {% widthratio evaluation.final_score 1 100 %}%">
+                        </div>
+                    </div>
+
+                </div>
+
+            </article>
+
+
+            <!-- REASONING -->
+            <article class="evaluation-reasoning-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▤</div>
+
+                    <div>
+                        <h2>Reasoning</h2>
+                        <p>Why this score was given.</p>
+                    </div>
+                </div>
+
+                <div class="evaluation-reasoning-box">
+                    <p>{{ evaluation.reasoning }}</p>
+                </div>
+
+            </article>
+
+
+            <!-- FEEDBACK -->
+            <article class="evaluation-feedback-card">
+
+                <div class="evaluation-result-title">
+                    <div class="evaluation-result-icon">▱</div>
+
+                    <div>
+                        <h2>
+                            Feedback
+                            <span>(optional)</span>
+                        </h2>
+
+                        <p>
+                            Send feedback to the teachers for supervision.
+                        </p>
+                    </div>
+                </div>
+
+                <form method="post" class="evaluation-feedback-form">
+
+                    {% csrf_token %}
+
+                    <textarea
+                        class="evaluation-feedback-input"
+                        name="student_feedback"
+                        placeholder="E.g. 'In the second line it is a 7 not a 1...'"
+                    >{{ evaluation.student_feedback }}</textarea>
+
+                    <button type="submit" class="evaluation-retry-button">
+                        Send to teacher →
+                    </button>
+
+                </form>
+
+                {% if evaluation.student_feedback_at %}
+                    <p class="evaluation-feedback-sent">
+                        Sent on {{ evaluation.student_feedback_at|date:"Y.m.d. H:i" }}.
+                    </p>
+                {% endif %}
+
+            </article>
+
+        </section>
+
+        {% else %}
+
+        <section class="evaluation-retry-card">
+
+            <div class="evaluation-retry-content">
+                <div class="evaluation-retry-icon">⏳</div>
+                <div>
+                    <h3>Not evaluated yet</h3>
+                    <p>Start the evaluation of the recognised text above.</p>
+                </div>
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+                <button type="submit" class="evaluation-retry-button">
+                    Get your evaluation →
+                </button>
+            </form>
+
+        </section>
+
+        {% endif %}
+
+    </main>
+
+
+    <footer class="evaluation-footer">
+        <span>ReSolved © 2026</span>
+        <span>Adaptive AI Learning Platform</span>
+    </footer>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+
+<script>
+    document.querySelectorAll(".evaluation-math").forEach((element) => {
+        katex.render(
+            element.dataset.expression,
+            element,
+            {
+                throwOnError: false,
+                displayMode: false
+            }
+        );
+    });
+
+
+    const menuButton = document.getElementById(
+        "evaluation-mobile-menu-button"
+    );
+
+    const mobileNav = document.getElementById(
+        "evaluation-mobile-nav"
+    );
+
+    menuButton.addEventListener("click", () => {
+        mobileNav.classList.toggle("open");
+
+        menuButton.setAttribute(
+            "aria-expanded",
+            mobileNav.classList.contains("open")
+        );
+    });
+</script>
+
+{% endblock %}
