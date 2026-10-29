@@ -23,4 +23,5 @@ COPY . .
 EXPOSE 8000
 
 # Fejlesztői alapértelmezés; élesben a compose.prod.yml felülírja gunicornra
-CMD ["python", "web/manage.py", "runserver", "0.0.0.0:8000"]
+
+CMD ["sh", "-c", "cd /app/web && python manage.py migrate --noinput && exec gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-10000}"]
