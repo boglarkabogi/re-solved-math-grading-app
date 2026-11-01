@@ -13,7 +13,7 @@ OCR_MODELS = {
         "api_key_env": "HF_KEY",
     },
     "llama": {
-        "name": "meta/llama-3.2-11b-vision-instruct",
+        "name": "meta/llama-3.2-90b-vision-instruct",
         "url": "https://integrate.api.nvidia.com/v1/chat/completions",
         "api_key_env": "LLM_API_KEY",
     },

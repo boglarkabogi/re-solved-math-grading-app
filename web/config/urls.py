@@ -10,6 +10,7 @@ from .views import (
     generate_assignment,
     generated_assignment,
     home,
+    job_status,
     leave_course,
     lesson_detail,
     ocr_recognition,
@@ -46,6 +47,7 @@ urlpatterns = [
     path(
         "course/<int:group_id>/lesson/<int:lesson_id>/recognition/", ocr_recognition, name="ocr_recognition"
     ),
+    path("course/<int:group_id>/lesson/<int:lesson_id>/status/", job_status, name="job_status"),
     path("admin/", admin.site.urls),
 ]
 

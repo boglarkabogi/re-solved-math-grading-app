@@ -6,16 +6,15 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import F
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
 
 from bank.models import TaskBank
 from courses.models import Class, Group, Member
-from motor.recognition.service import recognise_solution
-from submissions.models import Assignment, OcrAttempt, Submission
-from submissions.services import run_grading
+from submissions import queue
+from submissions.models import Assignment, Job, OcrAttempt, Submission
 
 logger = logging.getLogger(__name__)
 
@@ -530,86 +529,15 @@ def ocr_recognition(request, group_id, lesson_id):
                 lesson_id=lesson_id,
             )
 
+        job = queue.enqueue(submission, Job.Kind.OCR)
+
         logger.info(
-            "OCR request started: user=%s submission=%s ocr_attempt=%s run=%s image=%s",
+            "Recognition queued: user=%s submission=%s job=%s run=%s",
             request.user.id,
             submission.id,
-            ocr_attempt.id,
+            job.id,
             submission.ocr_run_count + 1,
-            ocr_attempt.image.name,
         )
-
-        try:
-            logger.info(
-                "Calling recognise_solution: task=%s",
-                assignment.task.code,
-            )
-
-            result = recognise_solution(
-                image_field=ocr_attempt.image,
-                task_text=assignment.task.task_text,
-            )
-
-            # Validate the response before counting success.
-            text = result["text"]
-            model_name = result["model_name"]
-
-            if not isinstance(text, str) or not text.strip():
-                raise ValueError("OCR returned empty or invalid text.")
-
-            if not isinstance(model_name, str):
-                raise ValueError("OCR returned an invalid model name.")
-
-            logger.info(
-                "recognise_solution returned successfully: model=%s text_length=%s",
-                model_name,
-                len(text),
-            )
-
-            # Save OCR result and counters together.
-            with transaction.atomic():
-                ocr_attempt.ocr_text = text
-                ocr_attempt.model_name = model_name
-
-                ocr_attempt.save(
-                    update_fields=[
-                        "ocr_text",
-                        "model_name",
-                    ]
-                )
-
-                Submission.objects.filter(pk=submission.pk).update(
-                    state=Submission.State.OCR_DONE,
-                    ocr_run_count=F("ocr_run_count") + 1,
-                    ocr_in_progress=False,
-                )
-
-            submission.refresh_from_db(fields=["ocr_run_count"])
-
-            logger.info(
-                "OCR result saved successfully: ocr_attempt=%s run_count=%s",
-                ocr_attempt.id,
-                submission.ocr_run_count,
-            )
-
-        except Exception:
-            logger.exception(
-                "OCR request failed: user=%s submission=%s ocr_attempt=%s",
-                request.user.id,
-                submission.id,
-                ocr_attempt.id,
-            )
-
-            # Failed OCR does not count against the student.
-            Submission.objects.filter(pk=submission.pk).update(
-                state=Submission.State.IMAGE_UPLOADED,
-                ocr_in_progress=False,
-            )
-
-            messages.error(
-                request,
-                "Recognition failed. Please try again.",
-            )
 
         return redirect(
             "ocr_recognition",
@@ -635,9 +563,80 @@ def ocr_recognition(request, group_id, lesson_id):
             "submission": submission,
             "ocr_attempt": ocr_attempt,
             "attempt": attempt,
+            "queued": _queue_state(submission),
         },
     )
 
+def _queue_state(submission):
+    """What the page should say about this submission's place in the queue.
+
+    Returns None when nothing is queued or running for it, so a template can
+    simply ask "is there a wait".
+    """
+    job = (
+        submission.jobs.filter(state__in=[Job.State.QUEUED, Job.State.RUNNING]).order_by("queued_at").first()
+    )
+
+    if job is None:
+        return None
+
+    place = queue.position(job)
+
+    return {
+        "job": job,
+        "kind": job.kind,
+        "running": job.state == Job.State.RUNNING,
+        "position": place,
+        "wait_seconds": queue.wait_seconds(place),
+    }
+
+
+@login_required
+def job_status(request, group_id, lesson_id):
+    """Where the student's work stands, as JSON, for the waiting page.
+
+    The waiting page asks this every couple of seconds. It answers with the
+    submission's own state only - never with anything about other students.
+    """
+    lesson = get_object_or_404(Class, id=lesson_id, group_id=group_id)
+
+    if not Member.objects.filter(user=request.user, group=lesson.group).exists():
+        raise Http404
+
+    assignment = get_object_or_404(
+        Assignment,
+        student=request.user,
+        session=lesson,
+        mode=Assignment.Mode.CLASS,
+    )
+
+    submission = get_object_or_404(Submission, assignment=assignment)
+
+    waiting = _queue_state(submission)
+
+    # Ha már nincs mire várni, a lap ide megy tovább. A sikertelen értékelés is
+    # ide tartozik: azt az eredménylap magyarázza el, a visszaúttal együtt.
+    if waiting is None and submission.state in (
+        Submission.State.GRADED,
+        Submission.State.FAILED,
+    ):
+        next_url = reverse("evaluation", kwargs={"group_id": group_id, "lesson_id": lesson_id})
+    elif waiting is None:
+        next_url = reverse("ocr_recognition", kwargs={"group_id": group_id, "lesson_id": lesson_id})
+    else:
+        next_url = ""
+
+    return JsonResponse(
+        {
+            "state": submission.state,
+            "waiting": waiting is not None,
+            "kind": waiting["kind"] if waiting else "",
+            "position": waiting["position"] if waiting else 0,
+            "wait_seconds": waiting["wait_seconds"] if waiting else 0,
+            "workers": queue.workers(),
+            "next_url": next_url,
+        }
+    )
 
 @login_required
 def evaluation(request, group_id, lesson_id):
@@ -688,16 +687,27 @@ def evaluation(request, group_id, lesson_id):
         # "student_feedback", anything else means "start the evaluation".
         if "student_feedback" in request.POST:
             _save_feedback(request, submission)
-        else:
-            _start_evaluation(request, submission, ocr_attempt)
+
+            return redirect(
+            "evaluation",
+            group_id=group_id,
+            lesson_id=lesson_id,
+            )
+
+        started = _start_evaluation(request, submission, ocr_attempt)
 
         return redirect(
-            "evaluation",
+            "ocr_recognition" if started else "evaluation",
             group_id=group_id,
             lesson_id=lesson_id,
         )
 
+
     lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
+
+    latest = submission.evaluations.first()
+
+    has_result = latest is not None and latest.final_score is not None
 
     return render(
         request,
@@ -710,22 +720,23 @@ def evaluation(request, group_id, lesson_id):
             "assignment": assignment,
             "submission": submission,
             "ocr_attempt": ocr_attempt,
-            "evaluation": submission.evaluations.first(),
+            "evaluation": latest if has_result else None,
+            "failed": not has_result and submission.state == Submission.State.FAILED,
+            "queued": _queue_state(submission),
         },
     )
 
 
 def _start_evaluation(request, submission, ocr_attempt):
-    """Run the grading engine, unless this submission is already graded."""
+    """Put the evaluation in the queue, unless this submission is already graded.
+
+    Returns True when a job is waiting, so the caller knows whether to send
+    the student to the waiting page or back to the result.
+    """
     if submission.state == Submission.State.GRADED:
-        # A finished evaluation is final. Re-running it would let a student
-        # keep trying until a better score comes out.
         messages.error(request, "This submission has already been evaluated.")
         return
 
-    # The comment about the recognised text arrives from the recognition page
-    # and is an input to grade(). Other buttons post without the field, and
-    # then we keep what the student wrote earlier.
     if "student_note" in request.POST:
         submission.student_note = request.POST.get("student_note", "").strip()
         submission.save(update_fields=["student_note"])
@@ -737,15 +748,19 @@ def _start_evaluation(request, submission, ocr_attempt):
         len(submission.student_note),
     )
 
-    evaluation_result = run_grading(submission, ocr_attempt)
+    Submission.objects.filter(pk=submission.pk).update(state=Submission.State.GRADING)
+    submission.refresh_from_db(fields=["state"])
 
-    if evaluation_result is None or evaluation_result.score is None:
-        messages.error(
-            request,
-            "The evaluation failed. Your teacher has been notified and will grade it by hand.",
-        )
-    else:
-        messages.success(request, "Your solution has been evaluated.")
+    job = queue.enqueue(submission, Job.Kind.GRADING)
+
+    logger.info(
+        "Evaluation queued: user=%s submission=%s job=%s",
+        request.user.id,
+        submission.id,
+        job.id,
+    )
+
+    return True
 
 
 def _save_feedback(request, submission):

@@ -23,7 +23,6 @@
 
         <nav class="evaluation-desktop-nav">
             <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
         </nav>
 
         <div class="evaluation-header-actions">
@@ -42,7 +41,6 @@
 
         <nav class="evaluation-mobile-nav" id="evaluation-mobile-nav">
             <a href="{% url 'home' %}">Home</a>
-            <a href="{% url 'submissions:my_submissions' %}">Assignments</a>
         </nav>
 
     </header>
@@ -120,8 +118,7 @@
             </div>
 
         </section>
-
-
+        
         <!-- TOP CONTENT -->
         <section class="evaluation-work-area">
 
@@ -303,6 +300,31 @@
 
         </section>
 
+        {% elif failed %}
+ 
+        <section class="evaluation-retry-card evaluation-failed-card">
+ 
+            <div class="evaluation-retry-content">
+                <div class="evaluation-retry-icon">⚠</div>
+                <div>
+                    <h3>The evaluation did not finish</h3>
+                    <p>
+                        The evaluation model did not give back a usable answer. Your
+                        solution has not been lost and your teacher has been notified. 
+                        You can go back to the recognised text and try again.
+                    </p>
+                </div>
+            </div>
+ 
+            <a
+                href="{% url 'ocr_recognition' group.id lesson.id %}"
+                class="evaluation-retry-button"
+            >
+                OK, back to the recognised text →
+            </a>
+ 
+        </section>
+
         {% else %}
 
         <section class="evaluation-retry-card">
@@ -315,7 +337,7 @@
                 </div>
             </div>
 
-            <form method="post">
+            <form method="post" id="evaluation-form">
                 {% csrf_token %}
                 <button type="submit" class="evaluation-retry-button">
                     Get your evaluation →
@@ -349,9 +371,8 @@
                 displayMode: false
             }
         );
-    });
-
-
+    });  
+    
     const menuButton = document.getElementById(
         "evaluation-mobile-menu-button"
     );

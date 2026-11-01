@@ -676,6 +676,76 @@ body {
     max-height: 260px;
 }
 
+.evaluation-waiting {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+ 
+    gap: 18px;
+ 
+    margin-bottom: 16px;
+    padding: 90px 24px;
+ 
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+ 
+    text-align: center;
+}
+ 
+.evaluation-waiting[hidden] {
+    display: none;
+}
+ 
+.evaluation-spinner {
+    width: 44px;
+    height: 44px;
+ 
+    border: 3px solid #e5e7eb;
+    border-top-color: #101827;
+    border-radius: 50%;
+ 
+    animation: evaluation-spin 0.9s linear infinite;
+}
+ 
+@keyframes evaluation-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .evaluation-spinner {
+        animation-duration: 3s;
+    }
+}
+ 
+.evaluation-waiting h2 {
+    margin: 0;
+ 
+    font-size: 16px;
+}
+ 
+.evaluation-waiting p {
+    margin: 0;
+ 
+    max-width: 46ch;
+ 
+    color: #777777;
+ 
+    font-size: 12px;
+    line-height: 1.7;
+}
+
+/* HA AZ ÉRTÉKELÉS NEM SIKERÜLT */
+ 
+.evaluation-failed-card {
+    border-left: 3px solid #b42318;
+}
+ 
+.evaluation-failed-card .evaluation-retry-icon {
+    color: #b42318;
+}
+ 
 @media (max-width: 768px) {
 
     .evaluation-header {

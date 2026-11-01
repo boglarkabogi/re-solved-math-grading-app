@@ -92,12 +92,24 @@ STATICFILES_DIRS = [
     BASE_DIR / "static",
 ]
 STATIC_ROOT = PROJECT_DIR / "staticfiles"
+
+_STATICFILES_BACKEND = (
+    "django.contrib.staticfiles.storage.StaticFilesStorage"
+    if DEBUG
+    else "whitenoise.storage.CompressedManifestStaticFilesStorage"
+)
+
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
-    "staticfiles": {"BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"},
+    "staticfiles": {"BACKEND": _STATICFILES_BACKEND},
 }
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+QUEUE_WORKERS = int(os.environ.get("QUEUE_WORKERS", "3"))
+
+# Csak a diáknak mutatott becsléshez kell, a sor működését nem befolyásolja.
+QUEUE_SECONDS_PER_JOB = int(os.environ.get("QUEUE_SECONDS_PER_JOB", "25"))
 
 # csak fejlesztői gépen legyen elérhető a /dev/ felület
 DEV_TOOLS_ENABLED = os.environ.get("DEV_TOOLS_ENABLED", "1") == "1"

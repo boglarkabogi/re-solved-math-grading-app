@@ -8,7 +8,7 @@ from django.urls import reverse
 from bank.models import TaskBank, Topic
 from courses.models import Class, Course, Group, Member
 from motor import llm
-from submissions import services
+from submissions import jobs, queue, services
 from submissions.models import Assignment, OcrAttempt, Submission
 
 
@@ -147,3 +147,38 @@ def calls(monkeypatch):
 def build_answer():
     """Build a grade() answer with some fields overridden."""
     return answer
+
+@pytest.fixture
+def work_queue():
+    """Run everything waiting in the queue, the way the worker would.
+
+    The views no longer call a model; they write a Job row. A test that wants
+    the result has to let the queue run, and it does so through the same
+    claim/run/finish path as ``manage.py run_worker`` - so the tests cover the
+    worker's logic too, without starting a process.
+
+    Returns the jobs it ran, newest last.
+    """
+
+    def run_all(limit=50):
+        done = []
+
+        for _ in range(limit):
+            job = queue.claim("test")
+
+            if job is None:
+                break
+
+            try:
+                jobs.run(job)
+            except Exception as error:
+                queue.finish(job, error=f"{type(error).__name__}: {error}")
+            else:
+                queue.finish(job)
+
+            job.refresh_from_db()
+            done.append(job)
+
+        return done
+
+    return run_all

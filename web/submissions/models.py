@@ -129,3 +129,65 @@ class Evaluation(models.Model):
     def final_score(self):
         """A tanári pont az erősebb; ha nincs, a modellé."""
         return self.teacher_score if self.teacher_score is not None else self.score
+
+class Job(models.Model):
+    """One queued piece of model work: a recognition run or an evaluation run.
+
+    The calls to the OCR and the grading model take tens of seconds, so they
+    cannot run inside the request: a classroom of students pressing the button
+    at the same time would tie up every web worker and run into the provider's
+    rate limit. The view only writes a row here, and a separate worker process
+    picks the rows up in the order they arrived.
+
+    The finished rows are also the measurement data: when a run was queued,
+    when it started, how long it took and whether it failed.
+    """
+
+    class Kind(models.TextChoices):
+        OCR = "ocr", "felismerés"
+        GRADING = "ertekeles", "értékelés"
+
+    class State(models.TextChoices):
+        QUEUED = "sorban", "sorban áll"
+        RUNNING = "fut", "fut"
+        DONE = "kesz", "kész"
+        FAILED = "hiba", "hiba"
+
+    submission = models.ForeignKey(Submission, on_delete=models.CASCADE, related_name="jobs")
+    kind = models.CharField("fajta", max_length=16, choices=Kind.choices)
+    state = models.CharField("állapot", max_length=16, choices=State.choices, default=State.QUEUED)
+
+    queued_at = models.DateTimeField("sorba került", auto_now_add=True)
+    started_at = models.DateTimeField("elindult", null=True, blank=True)
+    finished_at = models.DateTimeField("befejeződött", null=True, blank=True)
+
+    attempts = models.PositiveSmallIntegerField("próbálkozások", default=0)
+    error = models.TextField("hiba", blank=True)
+    worker = models.CharField("feldolgozó", max_length=80, blank=True)
+
+    class Meta:
+        # A sor sorrendje: ami előbb került be, az megy előbb.
+        ordering = ["queued_at", "id"]
+        indexes = [
+            # A feldolgozó minden körben ezt kérdezi le, ezért kap saját indexet.
+            models.Index(fields=["state", "queued_at"], name="job_state_queued_idx"),
+        ]
+
+    def __str__(self):
+        return f"{self.get_kind_display()} – {self.submission_id} – {self.get_state_display()}"
+
+    @property
+    def duration_seconds(self):
+        """How long the run took, or None while it has not finished."""
+        if self.started_at is None or self.finished_at is None:
+            return None
+
+        return (self.finished_at - self.started_at).total_seconds()
+
+    @property
+    def waited_seconds(self):
+        """How long the student waited in the queue before the run started."""
+        if self.started_at is None:
+            return None
+
+        return (self.started_at - self.queued_at).total_seconds()

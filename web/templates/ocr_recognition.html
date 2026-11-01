@@ -127,6 +127,7 @@
 
         </section>
 
+        <div id="grading-content"{% if queued %} hidden{% endif %}>
 
         <!-- MAIN WORK AREA -->
 
@@ -445,6 +446,45 @@
 
         </form>
 
+        </div>
+
+        <!-- AMÍG AZ ÉRTÉKELŐ MODELL DOLGOZIK -->
+
+        <section 
+            class="ocr-waiting" 
+            id="ocr-waiting" 
+            data-status-url="{% url 'job_status' group.id lesson.id %}"
+            {% if not queued %}hidden{% endif %}>
+
+            <div class="ocr-spinner" role="status" aria-label="Working"></div>
+            <h2 id="ocr-waiting-title">
+                {% if queued and queued.kind == 'ocr' %}
+                    Recognising your handwriting&hellip;
+                {% else %}
+                    Evaluating your solution&hellip;
+                {% endif %}
+            </h2>
+
+            <p class="ocr-waiting-queue" id="ocr-waiting-queue">
+                {% if queued %}
+                    {% if queued.running %}
+                        It is your turn: the model is working on your solution.
+                    {% else %}
+                        You are number {{ queued.position }} in the queue
+                        &middot; about {{ queued.wait_seconds }} seconds left
+                    {% endif %}
+                {% endif %}
+            </p>
+
+            <p>
+                Several students are served at the same time, so this can take
+                a minute when the whole class starts at once. You can keep this
+                page open, or come back later - your place in the queue is kept
+                either way.
+            </p>
+
+        </section>
+
     </main>
 
 </div>
@@ -567,6 +607,102 @@
         }
 
     }
+
+    const gradingForm = document.querySelector(".evaluation-form");
+
+    if (gradingForm !== null) {
+
+        gradingForm.addEventListener("submit", function () {
+
+            document.getElementById("grading-content").hidden = true;
+            document.getElementById("ocr-waiting").hidden = false;
+
+            /* A gomb a lap alján van, a jelzés a tartalom helyére kerül. */
+            window.scrollTo({ top: 0, behavior: "smooth" });
+
+            for (const button of gradingForm.querySelectorAll("button")) {
+                button.disabled = true;
+            }
+        });
+    }
+
+    window.addEventListener("pageshow", function () {
+
+        const content = document.getElementById("grading-content");
+        const waiting = document.getElementById("ocr-waiting");
+
+        if (content !== null && waiting !== null) {
+            content.hidden = false;
+            waiting.hidden = true;
+        }
+    });
+
+    if (queuedAtLoad) {
+
+        const statusUrl = waitingPanel.dataset.statusUrl;
+        const queueLine = document.getElementById("ocr-waiting-queue");
+        const title = document.getElementById("ocr-waiting-title");
+
+        let failures = 0;
+
+        const ask = async function () {
+
+            let answer;
+
+            try {
+                const response = await fetch(statusUrl, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                });
+
+                if (!response.ok) {
+                    throw new Error("status " + response.status);
+                }
+
+                answer = await response.json();
+                failures = 0;
+
+            } catch (error) {
+                failures += 1;
+
+                if (failures >= 5 && queueLine !== null) {
+                    queueLine.textContent =
+                        "The connection is unstable, but your solution is still "
+                        + "in the queue. This page will update when it can.";
+                }
+
+                return;
+            }
+
+            if (!answer.waiting) {
+                window.location.href = answer.next_url || window.location.href;
+                return;
+            }
+
+            if (title !== null) {
+                title.textContent =
+                    answer.kind === "ocr"
+                        ? "Recognising your handwriting…"
+                        : "Evaluating your solution…";
+            }
+
+            if (queueLine === null) {
+                return;
+            }
+
+            if (answer.position <= 1) {
+                queueLine.textContent =
+                    "It is your turn: the model is working on your solution.";
+            } else {
+                queueLine.textContent =
+                    "You are number " + answer.position + " in the queue · about "
+                    + answer.wait_seconds + " seconds left";
+            }
+        };
+
+        setInterval(ask, 3000);
+        ask();
+    }
+
 </script>
 
 {% endblock %}

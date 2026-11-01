@@ -9,10 +9,11 @@ from submissions.models import Evaluation, Submission
 
 
 @pytest.mark.django_db
-def test_a_post_runs_the_engine_and_stores_the_result(client, world, calls):
+def test_a_post_runs_the_engine_and_stores_the_result(client, world, calls, work_queue):
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     assert len(calls["recorded"]) == 1
 
@@ -27,7 +28,7 @@ def test_a_post_runs_the_engine_and_stores_the_result(client, world, calls):
 
 
 @pytest.mark.django_db
-def test_no_personal_data_is_handed_to_the_engine(client, world, calls):
+def test_no_personal_data_is_handed_to_the_engine(client, world, calls, work_queue):
     """The engine may only see the task, the solution, the text and the note."""
     student = world["student"]
     student.first_name = "Tímea"
@@ -38,6 +39,7 @@ def test_no_personal_data_is_handed_to_the_engine(client, world, calls):
     client.force_login(student)
 
     client.post(world["url"], {"student_note": "a 2. sorban 7 van"})
+    work_queue()
 
     args, kwargs = calls["recorded"][0]
     everything_sent = " ".join(str(value) for value in list(args) + list(kwargs.values()))
@@ -51,10 +53,11 @@ def test_no_personal_data_is_handed_to_the_engine(client, world, calls):
 
 
 @pytest.mark.django_db
-def test_a_successful_evaluation_moves_the_submission_to_graded(client, world, calls):
+def test_a_successful_evaluation_moves_the_submission_to_graded(client, world, calls, work_queue):
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     world["submission"].refresh_from_db()
     assert world["submission"].state == Submission.State.GRADED
@@ -62,22 +65,25 @@ def test_a_successful_evaluation_moves_the_submission_to_graded(client, world, c
 
 
 @pytest.mark.django_db
-def test_a_graded_submission_cannot_be_evaluated_again(client, world, calls):
+def test_a_graded_submission_cannot_be_evaluated_again(client, world, calls, work_queue):
     client.force_login(world["student"])
     client.post(world["url"])
+    work_queue()
 
     client.post(world["url"])
+    work_queue()
 
     assert len(calls["recorded"]) == 1
     assert Evaluation.objects.filter(submission=world["submission"]).count() == 1
 
 
 @pytest.mark.django_db
-def test_a_missing_score_fails_the_submission_but_keeps_the_answer(client, world, calls, build_answer):
+def test_a_missing_score_fails_the_submission_but_keeps_the_answer(client, world, calls, build_answer, work_queue):
     calls["answer"]["value"] = build_answer(pont=None, hiba="A modell nem adott JSON választ.")
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     world["submission"].refresh_from_db()
     assert world["submission"].state == Submission.State.FAILED
@@ -89,13 +95,15 @@ def test_a_missing_score_fails_the_submission_but_keeps_the_answer(client, world
 
 
 @pytest.mark.django_db
-def test_a_failed_submission_may_be_retried(client, world, calls, build_answer):
+def test_a_failed_submission_may_be_retried(client, world, calls, build_answer, work_queue):
     calls["answer"]["value"] = build_answer(pont=None)
     client.force_login(world["student"])
     client.post(world["url"])
+    work_queue()
 
     calls["answer"]["value"] = build_answer()
     client.post(world["url"])
+    work_queue()
 
     world["submission"].refresh_from_db()
     assert world["submission"].state == Submission.State.GRADED
@@ -103,7 +111,7 @@ def test_a_failed_submission_may_be_retried(client, world, calls, build_answer):
 
 
 @pytest.mark.django_db
-def test_a_crashing_engine_does_not_lose_the_submission(client, world, calls):
+def test_a_crashing_engine_does_not_lose_the_submission(client, world, calls, work_queue):
     def boom(*args, **kwargs):
         raise RuntimeError("no network")
 
@@ -111,6 +119,7 @@ def test_a_crashing_engine_does_not_lose_the_submission(client, world, calls):
     client.force_login(world["student"])
 
     response = client.post(world["url"])
+    work_queue()
 
     assert response.status_code == 302
     world["submission"].refresh_from_db()
@@ -120,11 +129,12 @@ def test_a_crashing_engine_does_not_lose_the_submission(client, world, calls):
 
 
 @pytest.mark.django_db
-def test_a_suspected_recognition_error_asks_for_a_teacher(client, world, calls, build_answer):
+def test_a_suspected_recognition_error_asks_for_a_teacher(client, world, calls, build_answer, work_queue):
     calls["answer"]["value"] = build_answer(ocr_hiba_gyanu=True)
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     world["submission"].refresh_from_db()
     assert world["submission"].state == Submission.State.GRADED
@@ -135,7 +145,7 @@ def test_a_suspected_recognition_error_asks_for_a_teacher(client, world, calls, 
 
 
 @pytest.mark.django_db
-def test_a_score_the_engine_refused_fails_the_submission(client, world, calls, build_answer):
+def test_a_score_the_engine_refused_fails_the_submission(client, world, calls, build_answer, work_queue):
     """motor.parsing turns an out-of-scale score into None rather than into 1."""
     calls["answer"]["value"] = build_answer(
         pont=None,
@@ -145,6 +155,7 @@ def test_a_score_the_engine_refused_fails_the_submission(client, world, calls, b
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     evaluation = Evaluation.objects.get(submission=world["submission"])
     assert evaluation.score is None
@@ -154,20 +165,22 @@ def test_a_score_the_engine_refused_fails_the_submission(client, world, calls, b
 
 
 @pytest.mark.django_db
-def test_an_unusable_confidence_is_stored_as_empty(client, world, calls, build_answer):
+def test_an_unusable_confidence_is_stored_as_empty(client, world, calls, build_answer, work_queue):
     calls["answer"]["value"] = build_answer(magabiztossag="nagyon")
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     evaluation = Evaluation.objects.get(submission=world["submission"])
     assert evaluation.confidence is None
 
 
 @pytest.mark.django_db
-def test_the_result_is_shown_on_the_page_after_grading(client, world, calls):
+def test_the_result_is_shown_on_the_page_after_grading(client, world, calls, work_queue):
     client.force_login(world["student"])
     client.post(world["url"])
+    work_queue()
 
     page = client.get(world["url"])
 
@@ -175,7 +188,7 @@ def test_the_result_is_shown_on_the_page_after_grading(client, world, calls):
 
 
 @pytest.mark.django_db
-def test_an_unreadable_text_is_flagged_for_the_teacher(client, world, calls, build_answer):
+def test_an_unreadable_text_is_flagged_for_the_teacher(client, world, calls, build_answer, work_queue):
     """The model says it could not read the text: re-OCR, do not blame the student."""
     calls["answer"]["value"] = build_answer(
         pont=0,
@@ -186,6 +199,7 @@ def test_an_unreadable_text_is_flagged_for_the_teacher(client, world, calls, bui
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     evaluation = Evaluation.objects.get(submission=world["submission"])
     assert evaluation.ocr_error_suspected is True
@@ -196,22 +210,24 @@ def test_an_unreadable_text_is_flagged_for_the_teacher(client, world, calls, bui
 
 
 @pytest.mark.django_db
-def test_an_unreadable_text_is_flagged_even_without_the_ocr_field(client, world, calls, build_answer):
+def test_an_unreadable_text_is_flagged_even_without_the_ocr_field(client, world, calls, build_answer, work_queue):
     calls["answer"]["value"] = build_answer(ertelmezheto=False, ocr_hiba_gyanu=False)
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     assert Evaluation.objects.get(submission=world["submission"]).ocr_error_suspected is True
 
 
 @pytest.mark.django_db
-def test_a_snapped_score_is_kept_but_flagged(client, world, calls, build_answer):
+def test_a_snapped_score_is_kept_but_flagged(client, world, calls, build_answer, work_queue):
     """The engine moved 0.8 onto 0.75 and said so. The student is not blocked."""
     calls["answer"]["value"] = build_answer(pont=0.75, pont_kerekitve=True)
     client.force_login(world["student"])
 
     client.post(world["url"])
+    work_queue()
 
     evaluation = Evaluation.objects.get(submission=world["submission"])
     assert str(evaluation.score) == "0.75"
@@ -222,7 +238,7 @@ def test_a_snapped_score_is_kept_but_flagged(client, world, calls, build_answer)
 
 
 @pytest.mark.django_db
-def test_every_allowed_score_is_kept_as_it_is(client, world, calls, build_answer):
+def test_every_allowed_score_is_kept_as_it_is(client, world, calls, build_answer, work_queue):
     for given, expected in (("0", "0.00"), ("0.25", "0.25"), ("0.5", "0.50"), ("1", "1.00")):
         Evaluation.objects.all().delete()
         world["submission"].state = Submission.State.OCR_DONE
@@ -232,6 +248,7 @@ def test_every_allowed_score_is_kept_as_it_is(client, world, calls, build_answer
         calls["answer"]["value"] = build_answer(pont=given, pont_kerekitve=False)
         client.force_login(world["student"])
         client.post(world["url"])
+        work_queue()
 
         evaluation = Evaluation.objects.get(submission=world["submission"])
         assert str(evaluation.score) == expected
@@ -240,7 +257,7 @@ def test_every_allowed_score_is_kept_as_it_is(client, world, calls, build_answer
 
 
 @pytest.mark.django_db
-def test_the_reference_solution_never_reaches_the_student_page(client, world, calls, build_answer):
+def test_the_reference_solution_never_reaches_the_student_page(client, world, calls, build_answer, work_queue):
     """grade() echoes helyes_megoldas back, and it is stored in raw_response.
 
     The page may show the reasoning and the score, never the right answer.
@@ -251,6 +268,7 @@ def test_the_reference_solution_never_reaches_the_student_page(client, world, ca
     )
     client.force_login(world["student"])
     client.post(world["url"])
+    work_queue()
 
     page = client.get(world["url"])
 

@@ -8,7 +8,10 @@ services:
       - /srv/dimat/pgdata:/var/lib/postgresql/data   # a szerver lemezén, hogy menthető legyen
 
   web:
-    command: gunicorn config.wsgi:application --chdir web --bind 0.0.0.0:8000 --workers 3 --timeout 120
+    command: sh /app/docker/start.sh
+    environment:
+      PORT: 8000
+      RUN_WORKER_IN_WEB: 0 
     volumes:
       - /srv/dimat/media:/app/media            # a beadott képek a szerver lemezén
     restart: unless-stopped
