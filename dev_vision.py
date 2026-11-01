@@ -19,9 +19,12 @@ CANDIDATES = [
     "meta/llama-3.2-11b-vision-instruct",
     "google/paligemma",
     "nvidia/nemotron-3-nano-omni-30b-a3b-reasoning",
-    # "meta/llama-3.2-90b-vision-instruct",
-    # "microsoft/phi-3-vision-128k-instruct",
-    # "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "meta/llama-3.2-90b-vision-instruct",
+    "microsoft/phi-3-vision-128k-instruct",
+    "nvidia/nemotron-3.5-super-vl-120b-a12b",
+    "meta/llama-3.2-11b-vision-instruct",
+    "nvidia/llama-3.2-nemoretriever-1b-vlm-embed-v1",
+    "nvidia/llama-nemotron-embed-vl-1b-v2"
 ]
 
 attempt = OcrAttempt.objects.exclude(image="").last()

@@ -121,9 +121,25 @@ def home(request):
             return redirect("home")
 
         try:
-            group = Group.objects.select_related("course").get(invite_code=invite_code)
+            group = Group.objects.select_related("course").get(invite_code=invite_code.upper())
         except Group.DoesNotExist:
             messages.error(request, "Invalid course code.")
+            return redirect("home")
+
+        other = (
+            Member.objects.filter(user=request.user, group__course=group.course)
+            .exclude(group=group)
+            .select_related("group")
+            .first()
+        )
+
+        if other is not None:
+            messages.error(
+                request,
+                f"You are already in another group of {group.course.name} "
+                f"({other.group.name}). Ask your teacher to move you "
+                f"if you need to change groups.",
+            )
             return redirect("home")
 
         membership, created = Member.objects.get_or_create(

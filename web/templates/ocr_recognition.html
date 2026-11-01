@@ -459,9 +459,9 @@
             <div class="ocr-spinner" role="status" aria-label="Working"></div>
             <h2 id="ocr-waiting-title">
                 {% if queued and queued.kind == 'ocr' %}
-                    Recognising your handwriting&hellip;
+                    Recognising your handwriting...;
                 {% else %}
-                    Evaluating your solution&hellip;
+                    Evaluating your solution...;
                 {% endif %}
             </h2>
 
@@ -626,14 +626,16 @@
         });
     }
 
+    const waitingPanel = document.getElementById("ocr-waiting");
+    const queuedAtLoad = waitingPanel !== null && !waitingPanel.hidden;
+
     window.addEventListener("pageshow", function () {
 
         const content = document.getElementById("grading-content");
-        const waiting = document.getElementById("ocr-waiting");
 
-        if (content !== null && waiting !== null) {
+        if (content !== null && waitingPanel !== null && !queuedAtLoad) {
             content.hidden = false;
-            waiting.hidden = true;
+            waitingPanel.hidden = true;
         }
     });
 

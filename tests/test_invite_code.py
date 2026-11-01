@@ -1,9 +1,10 @@
 """The invite code is generated, not typed."""
 
 import pytest
+from django.urls import reverse
 
 from courses.admin import GroupForm
-from courses.models import INVITE_CODE_ALPHABET, Course, Group, generate_invite_code
+from courses.models import INVITE_CODE_ALPHABET, Course, Group, Member, generate_invite_code
 
 
 @pytest.fixture
@@ -71,3 +72,52 @@ def test_the_admin_action_gives_every_selected_group_a_new_code(course, rf):
     group.refresh_from_db()
     assert group.invite_code != "OLDONE"
     assert len(group.invite_code) == 6
+
+@pytest.mark.django_db
+def test_a_student_cannot_join_two_groups_of_the_same_course(client, world, make_student):
+    """Two groups would mean two assignments for the same lesson topic."""
+    student = world["student"]
+    other_group = Group.objects.create(
+        course=world["group"].course,
+        name="2. csoport",
+        invite_code="MASIKKOD",
+    )
+
+    client.force_login(student)
+
+    answer = client.post(reverse("home"), {"invite_code": "MASIKKOD"}, follow=True)
+
+    messages = [str(m) for m in answer.context["messages"]]
+    assert any("already in another group" in m for m in messages)
+    assert not Member.objects.filter(user=student, group=other_group).exists()
+
+
+@pytest.mark.django_db
+def test_joining_a_different_course_is_still_allowed(client, world, make_student):
+    other = Group.objects.create(
+        course=Course.objects.create(name="Analízis I."),
+        name="1. csoport",
+        invite_code="ANALIZIS",
+    )
+
+    client.force_login(world["student"])
+
+    client.post(reverse("home"), {"invite_code": "ANALIZIS"}, follow=True)
+
+    assert Member.objects.filter(user=world["student"], group=other).exists()
+
+
+@pytest.mark.django_db
+def test_a_lowercase_code_is_accepted(client, world, make_student):
+    """The codes are printed in capitals; a student may type them in lower case."""
+    group = Group.objects.create(
+        course=Course.objects.create(name="Analízis I."),
+        name="1. csoport",
+        invite_code="ANALIZIS",
+    )
+
+    client.force_login(world["student"])
+
+    client.post(reverse("home"), {"invite_code": "analizis"}, follow=True)
+
+    assert Member.objects.filter(user=world["student"], group=group).exists()
