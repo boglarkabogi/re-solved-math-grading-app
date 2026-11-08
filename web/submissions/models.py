@@ -166,10 +166,10 @@ class Job(models.Model):
     worker = models.CharField("feldolgozó", max_length=80, blank=True)
 
     class Meta:
-        # A sor sorrendje: ami előbb került be, az megy előbb.
+        verbose_name = "modellfuttatás"
+        verbose_name_plural = "modellfuttatások"
         ordering = ["queued_at", "id"]
         indexes = [
-            # A feldolgozó minden körben ezt kérdezi le, ezért kap saját indexet.
             models.Index(fields=["state", "queued_at"], name="job_state_queued_idx"),
         ]
 

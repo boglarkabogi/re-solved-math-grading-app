@@ -91,15 +91,41 @@ class Class(models.Model):
         help_text="Üresen hagyva a témakör neve jelenik meg. Pl. LNKO, Kongruenciák II.",
     )
     state = models.CharField("állapot", max_length=16, choices=State.choices, default=State.PLANNED)
-    opened_at = models.DateTimeField("megnyitva", null=True, blank=True)
-    closed_at = models.DateTimeField("lezárva", null=True, blank=True)
+    opened_at = models.DateTimeField(
+        "nyitás ideje",
+        null=True,
+        blank=True,
+        help_text="Előre is megadható.",
+    )
+    closed_at = models.DateTimeField(
+        "zárás ideje",
+        null=True,
+        blank=True,
+        help_text="Előre is megadható. A diák lapjain ez jelenik meg határidőként.",   
+    )
     counts_towards_grade = models.BooleanField("pontba számít", default=True)
+    position = models.PositiveSmallIntegerField(
+        "sorszám",
+        null=True,
+        blank=True,
+        help_text="Üresen hagyva a csoport következő sorszámát kapja.",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "óra"
         verbose_name_plural = "órák"
+        ordering = ["position", "id"]
 
+    def save(self, *args, **kwargs):
+        if self.position is None:
+            last = Class.objects.filter(group=self.group).aggregate(models.Max("position"))[
+                "position__max"
+            ]
+            self.position = (last or 0) + 1
+
+        super().save(*args, **kwargs)
+        
     def __str__(self):
         return f"{self.group} – {self.display_name}"
 

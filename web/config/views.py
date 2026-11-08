@@ -209,9 +209,7 @@ def lesson_detail(request, group_id, lesson_id):
         messages.error(request, "You are not a member of this course.")
         return redirect("home")
 
-    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
-
-    lesson_number = lesson_ids.index(lesson.id) + 1
+    lesson_number = lesson.position
 
     assignment = (
         Assignment.objects.filter(
@@ -739,6 +737,7 @@ def evaluation(request, group_id, lesson_id):
             "evaluation": latest if has_result else None,
             "failed": not has_result and submission.state == Submission.State.FAILED,
             "queued": _queue_state(submission),
+            "lesson_number": lesson.position,
         },
     )
 

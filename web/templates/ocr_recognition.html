@@ -33,7 +33,10 @@
             </h1>
 
             <p>
-                {{ lesson_number }}. Lesson · Due to: 2026.09.20
+                {{ lesson_number }}. Lesson
+                {% if lesson.closed_at %}
+                    · Due to: {{ lesson.closed_at|date:"Y.m.d. H:i" }}
+                {% endif %}
             </p>
 
         </section>

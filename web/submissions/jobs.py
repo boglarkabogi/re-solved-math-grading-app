@@ -117,4 +117,12 @@ def run_evaluation(submission):
     if ocr_attempt is None or not ocr_attempt.ocr_text:
         raise ValueError("The submission has no recognised text to evaluate.")
 
-    return run_grading(submission, ocr_attempt)
+    evaluation = run_grading(submission, ocr_attempt)
+
+    if evaluation is None:
+        raise RuntimeError("The grading model did not answer.")
+
+    if evaluation.score is None:
+        raise RuntimeError("The grading model gave no usable score.")
+
+    return evaluation
