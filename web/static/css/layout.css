@@ -144,6 +144,39 @@ body {
     display: none;
 }
 
+/* SYSTEM MESSAGES */
+
+.app-messages {
+    width: 100%;
+    max-width: 1120px;
+
+    box-sizing: border-box;
+
+    margin: 16px auto 0;
+    padding: 0;
+
+    list-style: none;
+}
+
+.app-message {
+    margin-bottom: 8px;
+    padding: 12px 16px;
+
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-left: 3px solid #101827;
+
+    font-size: 11px;
+    line-height: 1.5;
+}
+
+.app-message--error {
+    border-left-color: #b42318;
+}
+
+.app-message--success {
+    border-left-color: #0f7b3d;
+}
 
 /* MAIN */
 

@@ -30,7 +30,7 @@ def world(db):
     )
     course = Course.objects.create(name="Dimat I.", term="2026/27/1")
     group = Group.objects.create(course=course, name="1. csoport", invite_code="ABC123")
-    lesson = Class.objects.create(group=group, topic=topic, name="LNKO")
+    lesson = Class.objects.create(group=group, state=Class.State.OPEN, topic=topic, name="LNKO")
 
     student = build_student("s@example.com")
     Member.objects.create(user=student, group=group)

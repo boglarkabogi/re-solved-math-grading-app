@@ -1,5 +1,6 @@
 from django import forms
 from django.contrib import admin
+from django.utils import timezone
 
 from bank.models import Topic
 
@@ -71,9 +72,36 @@ class ClassForm(forms.ModelForm):
 @admin.register(Class)
 class ClassAdmin(admin.ModelAdmin):
     form = ClassForm
-    list_display = ("__str__", "topic", "state", "counts_towards_grade", "opened_at", "closed_at")
-    list_filter = ("state", "topic", "group")
-    list_select_related = ("topic", "group", "group__course")
+    list_display = ("__str__", "position", "state", "counts_towards_grade", "open_now", "opened_at", "closed_at")
+    list_filter = ("state", "group")
+    actions = ["start_now", "close_now"]
+
+    @admin.display(description="nyitva?", boolean=True)
+    def open_now(self, lesson):
+        return lesson.is_open
+
+    @admin.action(description="Óra indítása most")
+    def start_now(self, request, queryset):
+        """A gomb időpontot ír, nem állapotot: így az ütemezéssel nem veszekszik."""
+        now = timezone.now()
+        started = 0
+
+        for lesson in queryset:
+            lesson.opened_at = now
+
+            if lesson.closed_at is not None and lesson.closed_at <= now:
+                lesson.closed_at = None
+
+            lesson.state = Class.State.OPEN
+            lesson.save(update_fields=["opened_at", "closed_at", "state"])
+            started += 1
+
+        self.message_user(request, f"{started} óra elindítva.")
+
+    @admin.action(description="Óra lezárása most")
+    def close_now(self, request, queryset):
+        closed = queryset.update(closed_at=timezone.now(), state=Class.State.CLOSED)
+        self.message_user(request, f"{closed} óra lezárva.")
 
 
 admin.site.register(Member)

@@ -68,7 +68,8 @@ def trial_run_detail(request, run_id):
             "result": result,
             "run": run,
             "error": error,
-            "expected_score": None,
+            "expected_score": run.expected_score,
+            "matches_expected": run.matches_expected,
             "stored": True,
         },
     )
@@ -107,6 +108,7 @@ def _run(request, data):
 
     result = result or {}
     score = result.get("pont")
+    expected = data.get("expected_score")
     run = TrialRun.objects.create(
         run_by=request.user,
         task_text=data["task_text"],
@@ -118,6 +120,7 @@ def _run(request, data):
         score=score,
         reasoning=result.get("indoklas") or "",
         confidence=result.get("magabiztossag"),
+        expected_score = expected,
         duration_ms=duration_ms,
     )
 
@@ -213,6 +216,21 @@ def benchmark_step(request, run_id):
 
     return render(request, "devtools/_benchmark.html", _benchmark_context(run))
 
+@staff_member_required
+def benchmark_run_detail(request, run_id):
+    """Egy korábbi regressziós futás újbóli megnyitása, olvasásra.
+
+    A félbehagyott futás nem indul újra attól, hogy valaki megnyitja: az
+    modellhívásokba kerülne, amit senki nem kért. A 'stored' jelzőtől a
+    sablon kihagyja az automatikus továbblépést.
+    """
+    run = get_object_or_404(BenchmarkRun, pk=run_id)
+
+    return render(
+        request,
+        "devtools/_benchmark.html",
+        {**_benchmark_context(run), "stored": True},
+    )
 
 def _grade_case(run, case):
     started = time.monotonic()

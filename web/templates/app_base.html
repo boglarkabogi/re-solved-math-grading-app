@@ -6,6 +6,16 @@
 {% block page_css %}{% endblock %}
 {% endblock %}
 
+{% if messages %}
+    <ul class="app-messages">
+        {% for message in messages %}
+            <li class="app-message app-message--{{ message.tags }}">
+                {{ message }}
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+
 {% block tartalom %}
 
 <div class="app-page">

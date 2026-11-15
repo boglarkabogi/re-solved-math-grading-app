@@ -2,6 +2,7 @@ import secrets
 
 from django.conf import settings
 from django.db import models
+from django.utils import timezone
 
 INVITE_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
 INVITE_CODE_LENGTH = 6
@@ -66,7 +67,7 @@ class Member(models.Model):
 
 
 class Class(models.Model):
-    """Egy órai alkalom: a tanár kézzel nyitja és zárja."""
+    """Egy órai alkalom: a tanár gombbal nyitja és zárja, vagy időpontot ad meg."""
 
     class State(models.TextChoices):
         PLANNED = "tervezett", "tervezett"
@@ -76,9 +77,6 @@ class Class(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE, related_name="orak")
     topic = models.ForeignKey(
         "bank.Topic",
-        # Null only so that the lessons created before this field existed
-        # survive the migration. New ones must name their topic: the task
-        # drawing has no other way to know what to hand out.
         null=True,
         on_delete=models.PROTECT,
         related_name="class_sessions",
@@ -125,7 +123,7 @@ class Class(models.Model):
             self.position = (last or 0) + 1
 
         super().save(*args, **kwargs)
-        
+
     def __str__(self):
         return f"{self.group} – {self.display_name}"
 
@@ -141,8 +139,42 @@ class Class(models.Model):
         return str(self.created_at.date())
 
     @property
+    def has_started(self):
+        """Elkezdődött-e már. Nyitási idő nélkül azonnal kezdettnek számít."""
+        return self.opened_at is None or self.opened_at <= timezone.now()
+
+    @property
+    def has_ended(self):
+        """Lejárt-e a zárási ideje. Zárási idő nélkül soha."""
+        return self.closed_at is not None and self.closed_at <= timezone.now()
+
+    @property
+    def effective_state(self):
+        """Az óra valódi állapota.
+
+        Ha vannak időpontok, azok döntenek - a tárolt állapot magától igazodik
+        hozzájuk. Egy "tervezett"-re hagyott óra is lezártnak számít, ha a
+        zárási ideje elmúlt. Ha nincs időpont, a tárolt állapot marad, vagyis
+        az, amit a tanár a gombokkal beállított.
+        """
+        now = timezone.now()
+
+        if self.closed_at is not None and self.closed_at <= now:
+            return self.State.CLOSED
+
+        if self.opened_at is not None and self.opened_at <= now:
+            return self.State.OPEN
+
+        if self.opened_at is not None:
+            # Be van ütemezve, de még nem kezdődött el.
+            return self.State.PLANNED
+
+        return self.state
+    
+    @property
     def is_open(self):
-        return self.state == self.State.OPEN
+        """Fogad-e most munkát ez az óra."""
+        return self.effective_state == self.State.OPEN
 
 
 class PracticePermission(models.Model):

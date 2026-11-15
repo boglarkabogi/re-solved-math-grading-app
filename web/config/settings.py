@@ -70,6 +70,18 @@ DATABASES = {
     )
 }
 
+if DEBUG:
+    DATABASES["default"]["CONN_MAX_AGE"] = 0
+
+if DATABASES["default"]["ENGINE"].endswith("sqlite3"):
+    DATABASES["default"].setdefault("OPTIONS", {}).update(
+        {
+            "timeout": 30,
+            "init_command": "PRAGMA journal_mode=DELETE; PRAGMA synchronous=NORMAL;",
+            "transaction_mode": "IMMEDIATE",
+        }
+    )
+
 AUTH_USER_MODEL = "accounts.User"
 LOGIN_URL = "/belepes/"
 LOGIN_REDIRECT_URL = "/home/"

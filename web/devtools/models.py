@@ -14,6 +14,7 @@ class TrialRun(models.Model):
     raw_response = models.TextField("nyers válasz", blank=True)
     score = models.DecimalField("pont", max_digits=3, decimal_places=2, null=True, blank=True)
     reasoning = models.TextField("indoklás", blank=True)
+    expected_score = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2, null=True, blank=True)
     confidence = models.PositiveSmallIntegerField("magabiztosság", null=True, blank=True)
     duration_ms = models.PositiveIntegerField("futásidő (ms)", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -25,6 +26,13 @@ class TrialRun(models.Model):
 
     def __str__(self):
         return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} – {self.score}"
+    
+    @property
+    def matches_expected(self):
+        if self.score is None or self.expected_score is None:
+            return None
+
+        return self.score == self.expected_score
 
 
 class BenchmarkCase(models.Model):

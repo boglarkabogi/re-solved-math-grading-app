@@ -67,7 +67,7 @@
 
     color: var(--dev-muted);
 
-    font-size: 15x;
+    font-size: 15px;
     line-height: 1.6;
 }
 
@@ -123,6 +123,10 @@
 }
 
 /* FORMS */
+
+.dev-form {
+    max-width: 70ch;
+}
 
 .dev-form p {
     margin: 0 0 16px;

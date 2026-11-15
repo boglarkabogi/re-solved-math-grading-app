@@ -20,6 +20,7 @@ import time
 from django.core.management.base import BaseCommand
 from django.db import close_old_connections
 
+from courses.services import sync_lesson_states
 from submissions import jobs, queue
 
 logger = logging.getLogger(__name__)
@@ -77,6 +78,21 @@ class Command(BaseCommand):
             for number in range(worker_count)
         ]
 
+        try:
+            sync_lesson_states()
+        except Exception:
+            logger.exception("Could not sync the lesson states")
+
+        if not options["once"]:
+            threads.append(
+                threading.Thread(
+                    target=self._sync_lessons,
+                    args=(stopping,),
+                    daemon=True,
+                    name="lesson-sync",
+                )
+            )
+
         for thread in threads:
             thread.start()
 
@@ -111,6 +127,18 @@ class Command(BaseCommand):
                 continue
 
             self._run(job, worker_name)
+
+    def _sync_lessons(self, stopping, interval=60):
+        """Percenként hozzáigazítja az órák állapotát az időpontjaikhoz."""
+        while not stopping.is_set():
+            close_old_connections()
+
+            try:
+                sync_lesson_states()
+            except Exception:
+                logger.exception("Could not sync the lesson states")
+
+            stopping.wait(interval)
 
     def _run(self, job, worker_name):
         started = time.monotonic()

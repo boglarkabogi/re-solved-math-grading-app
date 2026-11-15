@@ -141,6 +141,27 @@
                     </p>
 
                 </div>
+            
+            {% elif not lesson.is_open %}
+
+                <div class="assignment-empty">
+
+                    {% if lesson.has_ended %}
+                        <h3>This lesson is closed</h3>
+                        <p>
+                            New assignments cannot be generated any more. If you
+                            worked on this lesson earlier, your solution and its
+                            result are still available.
+                        </p>
+                    {% elif lesson.opened_at %}
+                        <h3>This lesson has not started yet</h3>
+                        <p>It opens on {{ lesson.opened_at|date:"Y.m.d. H:i" }}.</p>
+                    {% else %}
+                        <h3>Not open yet</h3>
+                        <p>Your teacher has not opened this lesson.</p>
+                    {% endif %}
+
+                </div>
 
             {% else %}
 
@@ -228,7 +249,7 @@
                     <span>→</span>
                 </a>
 
-            {% else %}
+            {% elif lesson.is_open %}
 
                 <form
                     method="post"
