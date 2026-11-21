@@ -47,8 +47,9 @@ def image_to_data_url(image_field):
 def recognise_solution(
     image_field,
     task_text,
+    model_key=None,
 ):
-    model = get_ocr_model()
+    model = get_ocr_model(model_key)
 
     prompt = f"""
 The image contains a handwritten student solution.

@@ -13,6 +13,7 @@ from django.utils import timezone
 
 from bank.models import TaskBank
 from courses.models import Class, Group, Member
+from motor.recognition.providers import available_ocr_models
 from motor.recognition.service import recognise_solution
 from submissions.models import Assignment, OcrAttempt, Submission
 from submissions.services import run_grading
@@ -405,10 +406,16 @@ def generated_assignment(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
+    ocr_models = available_ocr_models()
+    model_key = request.POST.get("ocr_model", "")
+
     if request.method == "POST":
         image = request.FILES.get("solution_image")
 
-        if image is None:
+        if model_key not in ocr_models:
+            messages.error(request, "Select an available OCR model.")
+
+        elif image is None:
             messages.error(request, "Please select an image.")
 
         elif image.size > 20 * 1024 * 1024:
@@ -437,7 +444,7 @@ def generated_assignment(request, group_id, lesson_id):
                 },
             )
 
-            return redirect(f"{url}?autostart=1")
+            return redirect(f"{url}?autostart=1&ocr_model={model_key}")
 
     attempt = min(submission.ocr_run_count + 1, 3)
 
@@ -445,6 +452,8 @@ def generated_assignment(request, group_id, lesson_id):
         request,
         "generated_assignment.html",
         {
+            "ocr_models": ocr_models,
+            "selected_ocr_model": model_key,
             "lesson": lesson,
             "lesson_number": lesson_number,
             "course": lesson.group.course,
@@ -499,7 +508,14 @@ def ocr_recognition(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
+    ocr_models = available_ocr_models()
+
     if request.method == "POST":
+        model_key = request.POST.get("ocr_model", "")
+        if model_key not in ocr_models:
+            messages.error(request, "Select an available OCR model.")
+            return redirect("ocr_recognition", group_id=group_id, lesson_id=lesson_id)
+
         # Atomically reserve the recognition slot.
         reserved = Submission.objects.filter(
             pk=submission.pk,
@@ -548,6 +564,7 @@ def ocr_recognition(request, group_id, lesson_id):
             result = recognise_solution(
                 image_field=ocr_attempt.image,
                 task_text=assignment.task.task_text,
+                model_key=model_key,
             )
 
             # Validate the response before counting success.
@@ -611,11 +628,11 @@ def ocr_recognition(request, group_id, lesson_id):
                 "Recognition failed. Please try again.",
             )
 
-        return redirect(
+        url = reverse(
             "ocr_recognition",
-            group_id=group_id,
-            lesson_id=lesson_id,
+            kwargs={"group_id": group_id, "lesson_id": lesson_id},
         )
+        return redirect(f"{url}?ocr_model={model_key}")
 
     lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
 
@@ -627,6 +644,8 @@ def ocr_recognition(request, group_id, lesson_id):
         request,
         "ocr_recognition.html",
         {
+            "ocr_models": ocr_models,
+            "selected_ocr_model": request.GET.get("ocr_model", ""),
             "lesson": lesson,
             "lesson_number": lesson_number,
             "group": lesson.group,

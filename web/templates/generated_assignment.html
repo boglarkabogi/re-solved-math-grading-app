@@ -311,8 +311,22 @@
 
                 </div>
 
+                    <select
+                        id="ocr-model"
+                        name="ocr_model"
+                        class="ocr-model-select"
+                        aria-label="OCR model"
+                        required>
+                        <option value="">Select a model</option>
+                        {% for key, name in ocr_models.items %}
+                            <option value="{{ key }}"{% if key == selected_ocr_model %} selected{% endif %}>{{ name }}</option>
+                        {% endfor %}
+                    </select>
+                    {% if not ocr_models %}<p>No OCR models are configured.</p>{% endif %}
 
                 <button
+                    id="recognise-button"
+                    disabled
                     type="submit"
                     class="recognise-button"
                 >
@@ -359,6 +373,17 @@
 
     const fileInput =
         document.getElementById("solution-image");
+
+    const modelSelect = document.getElementById("ocr-model");
+    const recogniseButton = document.getElementById("recognise-button");
+
+    function updateRecogniseButton() {
+        recogniseButton.disabled = !modelSelect.value || !fileInput.files.length;
+    }
+
+    modelSelect.addEventListener("change", updateRecogniseButton);
+    fileInput.addEventListener("change", updateRecogniseButton);
+    updateRecogniseButton();
 
     const preview =
         document.getElementById("solution-preview");
