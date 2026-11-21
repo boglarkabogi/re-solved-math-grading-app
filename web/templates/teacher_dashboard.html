@@ -1,0 +1,75 @@
+{% extends "app_base.html" %}
+{% load static %}
+
+{% block cim %}Teacher dashboard | ReSolve{% endblock %}
+{% block page_css %}
+<link rel="stylesheet" href="{% static 'css/teacher_dashboard.css' %}">
+{% endblock %}
+
+{% block app_content %}
+<div class="teacher-page">
+  <div class="teacher-topline">
+    <div>
+      <span class="teacher-eyebrow">TEACHER WORKSPACE</span>
+      <h1>Teacher dashboard</h1>
+      <p>Manage courses, assignments and student submissions.</p>
+    </div>
+    <span class="teacher-demo-label">DEMO MODE</span>
+  </div>
+
+  <div class="teacher-tabs" role="tablist" aria-label="Teacher dashboard sections">
+    <button type="button" class="teacher-tab is-active" data-tab="courses" role="tab" aria-selected="true">Courses</button>
+    <button type="button" class="teacher-tab" data-tab="tasks" role="tab" aria-selected="false">Task bank</button>
+    <button type="button" class="teacher-tab" data-tab="submissions" role="tab" aria-selected="false">Student submissions</button>
+  </div>
+
+  <section class="teacher-panel" data-panel="courses">
+    <div class="teacher-section-heading">
+      <div><h2>Your courses</h2><p>Organise classes and share a joining code with your students.</p></div>
+      <button type="button" class="teacher-primary" data-open="course">+ Create course</button>
+    </div>
+    <div id="teacher-course-list" class="teacher-course-list"></div>
+  </section>
+
+  <section class="teacher-panel" data-panel="tasks" hidden>
+    <div class="teacher-section-heading">
+      <div><h2>Task bank</h2><p>Create tasks that can later be assigned to your courses.</p></div>
+      <button type="button" class="teacher-primary" data-open="task">+ Add task</button>
+    </div>
+    <div class="teacher-filter-row">
+      <label for="teacher-topic-filter">Topic</label>
+      <select id="teacher-topic-filter"><option value="all">All topics</option><option value="Divisibility">Divisibility</option><option value="Linear congruences">Linear congruences</option><option value="Polynomial GCD">Polynomial GCD</option></select>
+      <span id="teacher-task-count" class="teacher-counter"></span>
+    </div>
+    <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>Code</th><th>Task</th><th>Topic</th><th>Availability</th><th></th></tr></thead><tbody id="teacher-task-body"></tbody></table></div>
+  </section>
+
+  <section class="teacher-panel" data-panel="submissions" hidden>
+    <div class="teacher-section-heading"><div><h2>Student submissions</h2><p>Overview of student progress and evaluation results.</p></div></div>
+    <div class="teacher-filter-row"><label for="teacher-submission-filter">Status</label><select id="teacher-submission-filter"><option value="all">All submissions</option><option value="Evaluated">Evaluated</option><option value="Pending review">Pending review</option><option value="Not submitted">Not submitted</option></select></div>
+    <div class="teacher-table-wrap"><table class="teacher-table"><thead><tr><th>Student</th><th>Neptun</th><th>Course</th><th>Lesson</th><th>Status</th><th>Score</th><th></th></tr></thead><tbody id="teacher-submission-body"></tbody></table></div>
+  </section>
+</div>
+
+<div class="teacher-modal-backdrop" id="teacher-modal" hidden>
+  <div class="teacher-modal" role="dialog" aria-modal="true" aria-labelledby="teacher-modal-title">
+    <div class="teacher-modal-heading"><h2 id="teacher-modal-title">Create course</h2><button type="button" class="teacher-close" id="teacher-modal-close" aria-label="Close dialog">×</button></div>
+    <form id="teacher-course-form" class="teacher-form" hidden>
+      <label>Course name<input name="name" placeholder="Discrete Mathematics" required maxlength="120"></label>
+      <label>Semester<input name="term" placeholder="2026/27/1" required maxlength="20"></label>
+      <label>Group name<input name="group" placeholder="Group 01" required maxlength="120"></label>
+      <div class="teacher-form-actions"><button type="button" class="teacher-secondary" data-close>Cancel</button><button class="teacher-primary" type="submit">Create course</button></div>
+    </form>
+    <form id="teacher-task-form" class="teacher-form" hidden>
+      <label>Task code<input name="code" placeholder="DIV-011" required maxlength="64"></label>
+      <label>Topic<select name="topic" required><option value="Divisibility">Divisibility</option><option value="Linear congruences">Linear congruences</option><option value="Polynomial GCD">Polynomial GCD</option></select></label>
+      <label>Task description<textarea name="description" rows="3" placeholder="Find the greatest common divisor of 84 and 126." required></textarea></label>
+      <label>Correct solution<textarea name="solution" rows="3" placeholder="Solution for the grading model..." required></textarea></label>
+      <label>Availability<select name="availability"><option>Class and practice</option><option>Class only</option><option>Practice only</option></select></label>
+      <div class="teacher-form-actions"><button type="button" class="teacher-secondary" data-close>Cancel</button><button class="teacher-primary" type="submit">Add task</button></div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block page_scripts %}<script src="{% static 'js/teacher_dashboard.js' %}" defer></script>{% endblock %}
