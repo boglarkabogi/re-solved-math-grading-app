@@ -14,6 +14,7 @@ from .views import (
     lesson_detail,
     ocr_recognition,
     register,
+    teacher_dashboard,
 )
 
 urlpatterns = [
@@ -47,6 +48,7 @@ urlpatterns = [
         "course/<int:group_id>/lesson/<int:lesson_id>/recognition/", ocr_recognition, name="ocr_recognition"
     ),
     path("admin/", admin.site.urls),
+    path("teacher/", teacher_dashboard, name="teacher_dashboard"),
 ]
 
 if settings.DEV_TOOLS_ENABLED:

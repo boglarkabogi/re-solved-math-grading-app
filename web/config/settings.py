@@ -71,7 +71,7 @@ DATABASES = {
 }
 
 AUTH_USER_MODEL = "accounts.User"
-LOGIN_URL = "/belepes/"
+LOGIN_URL = "/"
 LOGIN_REDIRECT_URL = "/home/"
 LOGOUT_REDIRECT_URL = "/"
 
