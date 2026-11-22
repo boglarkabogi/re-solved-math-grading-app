@@ -859,3 +859,8 @@ def leave_course(request, group_id):
             messages.success(request, f"You left {course_name}.")
 
     return redirect("home")
+
+
+@login_required
+def teacher_dashboard(request):
+    return render(request, "teacher_dashboard.html")
