@@ -310,7 +310,7 @@ def generate_assignment(request, group_id, lesson_id):
             group_id=group_id,
             lesson_id=lesson_id,
         )
-    
+
     if not lesson.is_open:
         if lesson.has_ended or lesson.state == Class.State.CLOSED:
             message = (
@@ -332,7 +332,7 @@ def generate_assignment(request, group_id, lesson_id):
             group_id=group_id,
             lesson_id=lesson_id,
         )
-    
+
     topic = lesson.topic
 
     if topic is None:
@@ -734,9 +734,6 @@ def evaluation(request, group_id, lesson_id):
             lesson_id=lesson_id,
         )
 
-
-    lesson_ids = list(Class.objects.filter(group=lesson.group).order_by("id").values_list("id", flat=True))
-
     latest = submission.evaluations.first()
 
     has_result = latest is not None and latest.final_score is not None
@@ -746,7 +743,6 @@ def evaluation(request, group_id, lesson_id):
         "evaluation.html",
         {
             "lesson": lesson,
-            "lesson_number": lesson_ids.index(lesson.id) + 1,
             "group": lesson.group,
             "course": lesson.group.course,
             "assignment": assignment,

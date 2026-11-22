@@ -7,6 +7,7 @@
 <div
     id="benchmark-panel"
     {% if remaining and not stored%}
+        data-running
         hx-get="{% url 'devtools:benchmark-step' run.pk %}"
         hx-trigger="load"
         hx-target="#benchmark-panel"
@@ -33,7 +34,7 @@
         </div>
 
         <span class="dev-meta">
-            {% if remaining %}
+            {% if remaining and not stored %}
                 fut… még {{ remaining }} eset
             {% elif remaining %}
                 félbehagyott futás · {{ done }} eset van meg {{ run.case_count }}-ból
@@ -60,7 +61,7 @@
         <tbody>
             {% for result in results %}
                 <tr>
-                    <td>{{ result.case.label }}</td>
+                    <td>{{ result.case_label|default:result.case.label|default:"–" }}</td>
                     <td class="dev-number">{{ result.expected_score }}</td>
                     <td class="dev-number">
                         {% if result.score is None %}

@@ -59,16 +59,8 @@ class BenchmarkCsvForm(forms.Form):
     csv_file = forms.FileField(
         label="CSV fájl",
         help_text=(
-            "Oszlopok: label, task_code, task_text, correct_solution, solution_text, "
-            "expected_score, comment. Magyar nevek is mennek. Pontosvessző és vessző is jó "
-            "elválasztónak. A task_code megadásával a feladat és a helyes megoldás a "
-            "feladatbankból jön."
+            "Oszlopok: label, task_code, task_text, correct_solution, solution_text, expected_score, comment."
         ),
-    )
-    replace_existing = forms.BooleanField(
-        label="A meglévő tesztesetek törlése betöltés előtt",
-        required=False,
-        help_text="Enélkül az új esetek a meglévők mellé kerülnek.",
     )
 
 
@@ -84,4 +76,13 @@ class BenchmarkRunForm(forms.Form):
         label="A prompt verziója",
         required=False,
         help_text="Szabad szöveg, hogy később tudd, melyik prompttal mért a futás. Pl. v3-szigorubb.",
+    )
+    system_prompt = forms.CharField(
+        label="",
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 20, "spellcheck": "false"}),
+        help_text=(
+            "Ez megy a modellnek rendszerüzenetként. Az itteni átírás csak erre a futásra "
+            "érvényes — a kódbázist nem módosítja, amíg a mentés gombot meg nem nyomod."
+        ),
     )

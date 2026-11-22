@@ -68,7 +68,7 @@
                 </div>
 
                 <form
-                    class="dev-form"
+                    class="dev-form dev-form--grid"
                     hx-post="{% url 'devtools:trial-run' %}"
                     hx-target="#result"
                     hx-swap="innerHTML"
@@ -150,32 +150,75 @@
                 modellváltozások hatása összehasonlítható.
             </p>
 
-            <div class="dev-columns">
 
-                <form
-                    class="dev-form"
-                    method="post"
-                    action="{% url 'devtools:import-cases' %}"
-                    enctype="multipart/form-data"
-                >
-                    {% csrf_token %}
-                    {{ csv_form.as_p }}
-                    <button type="submit" class="dev-button dev-button--quiet">CSV betöltése</button>
-                </form>
+            <form
+                class="dev-form dev-form--grid dev-csv-form"
+                method="post"
+                action="{% url 'devtools:import-cases' %}"
+                enctype="multipart/form-data"
+            >
+                {% csrf_token %}
+                {{ csv_form.as_p }}
 
-                <form
-                    class="dev-form"
-                    hx-post="{% url 'devtools:benchmark-start' %}"
-                    hx-target="#benchmark"
-                    hx-swap="innerHTML"
-                    hx-disabled-elt="find button"
-                >
-                    {% csrf_token %}
-                    {{ benchmark_form.as_p }}
-                    <button type="submit" class="dev-button">A teljes készlet futtatása</button>
-                </form>
+                <button type="submit" class="dev-button dev-button--quiet">CSV betöltése</button>
+            </form>
 
-            </div>
+            <form
+                class="dev-form dev-form--run"
+                hx-post="{% url 'devtools:benchmark-start' %}"
+                hx-target="#benchmark"
+                hx-swap="innerHTML"
+                hx-disabled-elt="find button"
+            >
+                {% csrf_token %}
+
+                <p>
+                    {{ benchmark_form.model_name.label_tag }}
+                    {{ benchmark_form.model_name }}
+                    <span class="helptext">{{ benchmark_form.model_name.help_text }}</span>
+                </p>
+
+                <details class="dev-prompt">
+
+                    <summary>
+                        Az értékelő prompt
+                        <span class="dev-meta">megnézhető, és erre a futásra átírható</span>
+                    </summary>
+
+                    <div class="dev-prompt-body">
+
+                        {{ benchmark_form.system_prompt }}
+
+                        <p class="helptext">{{ benchmark_form.system_prompt.help_text }}</p>
+
+                        <div class="dev-prompt-actions">
+                            <button
+                                type="button"
+                                class="dev-button dev-button--quiet"
+                                hx-post="{% url 'devtools:save-prompt' %}"
+                                hx-include="closest form"
+                                hx-target="#prompt-save-status"
+                                hx-swap="innerHTML"
+                                hx-confirm="Ez felülírja a motor/system_prompt.txt fájlt a kódbázisban. Biztos?"
+                            >
+                                Mentés a kódbázisba
+                            </button>
+                            <span id="prompt-save-status"></span>
+                        </div>
+
+                    </div>
+
+                </details>
+
+                <p>
+                    {{ benchmark_form.prompt_version.label_tag }}
+                    {{ benchmark_form.prompt_version }}
+                    <span class="helptext">{{ benchmark_form.prompt_version.help_text }}</span>
+                </p>
+
+                <button type="submit" class="dev-button">A teljes készlet futtatása</button>
+
+            </form>
 
             <div id="benchmark"></div>
 
@@ -203,6 +246,7 @@
                     {% for run in benchmark_runs %}
                         <tr
                             class="dev-clickable"
+                            hx-trigger="click[!benchmarkRunning()]"
                             hx-get="{% url 'devtools:benchmark-run-detail' run.pk %}"
                             hx-target="#benchmark"
                             hx-swap="innerHTML"
@@ -215,7 +259,7 @@
                             <td class="dev-number">{{ run.mean_deviation|floatformat:3|default:"–" }}</td>
                         </tr>
                     {% empty %}
-                        <tr><td colspan="5" class="dev-empty">Még nem futott regresszió.</td></tr>
+                        <tr><td colspan="6" class="dev-empty">Még nem futott regresszió.</td></tr>
                     {% endfor %}
                 </tbody>
             </table>
@@ -228,6 +272,11 @@
 
 
 <script>
+
+    window.benchmarkRunning = function () {
+        return document.querySelector("#benchmark [data-running]") !== null;
+    };
+
     (function () {
         const search = document.getElementById("task-search");
         const list = document.getElementById("task-list");

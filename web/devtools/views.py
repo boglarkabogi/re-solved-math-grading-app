@@ -10,6 +10,7 @@ from django.views.decorators.http import require_POST
 from bank.models import TaskBank
 from motor.grading import grade
 from motor.parsing import extract_json
+from motor.prompts import load_system_prompt, save_system_prompt
 
 from .csv_import import CsvError, read_cases
 from .forms import BenchmarkCsvForm, BenchmarkRunForm, TrialRunForm
@@ -30,7 +31,7 @@ def _page_context(request):
     return {
         "form": TrialRunForm(initial=_initial_from_task_bank(request)),
         "csv_form": BenchmarkCsvForm(),
-        "benchmark_form": BenchmarkRunForm(),
+        "benchmark_form": BenchmarkRunForm(initial={"system_prompt": load_system_prompt()}),
         "recent_runs": TrialRun.objects.all()[:20],
         "bank_tasks": TaskBank.objects.filter(active=True).select_related("topic").order_by("code"),
         "cases": BenchmarkCase.objects.all(),
@@ -127,8 +128,15 @@ def _run(request, data):
     expected = data.get("expected_score")
     benchmark_case = None
     if score is not None and data.get("save_as_benchmark_case"):
+        bank_task = (
+            TaskBank.objects.filter(code=data.get("label") or "")
+            .select_related("topic")
+            .first()
+        )
         benchmark_case = BenchmarkCase.objects.create(
             label=data.get("label") or f"eset-{run.pk}",
+            task_code=bank_task.code if bank_task else "",
+            topic=bank_task.topic if bank_task else None,
             task_text=data["task_text"],
             correct_solution=data["correct_solution"],
             solution_text=data["solution_text"],
@@ -166,16 +174,32 @@ def import_cases(request):
         messages.error(request, str(error))
         return redirect("devtools:trial-run")
 
-    if form.cleaned_data.get("replace_existing"):
-        removed, _ = BenchmarkCase.objects.all().delete()
-        messages.info(request, f"{removed} korábbi sor törölve.")
-
+    BenchmarkCase.objects.all().delete()
     BenchmarkCase.objects.bulk_create(BenchmarkCase(**row) for row in rows)
 
     messages.success(request, f"{len(rows)} teszteset betöltve.")
 
     return redirect("devtools:trial-run")
 
+@staff_member_required
+@require_POST
+def save_prompt(request):
+    """A szerkesztett promptot visszaírja abba a fájlba, amit a repó követ."""
+    text = (request.POST.get("system_prompt") or "").strip()
+
+    if not text:
+        return render(request, "devtools/_prompt_status.html", {"error": "A prompt nem lehet üres."})
+
+    try:
+        save_system_prompt(text)
+    except OSError as error:
+        return render(
+            request,
+            "devtools/_prompt_status.html",
+            {"error": f"Nem sikerült menteni: {error}"},
+        )
+
+    return render(request, "devtools/_prompt_status.html", {"saved": True})
 
 @staff_member_required
 @require_POST
@@ -189,9 +213,12 @@ def benchmark_start(request):
     if case_count == 0:
         return render(request, "devtools/_benchmark.html", {"empty": True})
 
+    prompt = (form.cleaned_data.get("system_prompt") or "").strip() or load_system_prompt()
+
     run = BenchmarkRun.objects.create(
         model_name=form.cleaned_data.get("model_name") or "",
         prompt_version=form.cleaned_data.get("prompt_version") or "",
+        system_prompt=prompt,
         case_count=case_count,
     )
 
@@ -238,7 +265,11 @@ def _grade_case(run, case):
 
     try:
         result = grade(
-            case.task_text, case.correct_solution, case.solution_text, modell=run.model_name or None
+            case.task_text,
+            case.correct_solution,
+            case.solution_text,
+            modell=run.model_name or None,
+            system_prompt=run.system_prompt or None,
         )
     except Exception as error:
         # One broken case must not stop the run: record it and move on.
@@ -250,6 +281,8 @@ def _grade_case(run, case):
     BenchmarkResult.objects.create(
         run=run,
         case=case,
+        case_label=case.label or f"eset-{case.pk}",
+        topic_label=case.topic.name if case.topic_id else "",
         expected_score=case.expected_score,
         score=Decimal(str(score)) if score is not None else None,
         reasoning=result.get("indoklas") or "",
@@ -274,7 +307,7 @@ def _update_totals(run):
 
 
 def _benchmark_context(run):
-    results = run.results.select_related("case").order_by("case_id")
+    results = run.results.select_related("case").order_by("pk")
     done = results.count()
 
     return {

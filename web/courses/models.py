@@ -99,7 +99,7 @@ class Class(models.Model):
         "zárás ideje",
         null=True,
         blank=True,
-        help_text="Előre is megadható. A diák lapjain ez jelenik meg határidőként.",   
+        help_text="Előre is megadható. A diák lapjain ez jelenik meg határidőként.",
     )
     counts_towards_grade = models.BooleanField("pontba számít", default=True)
     position = models.PositiveSmallIntegerField(
@@ -115,6 +115,9 @@ class Class(models.Model):
         verbose_name_plural = "órák"
         ordering = ["position", "id"]
 
+    def __str__(self):
+        return f"{self.group} – {self.display_name}"
+
     def save(self, *args, **kwargs):
         if self.position is None:
             last = Class.objects.filter(group=self.group).aggregate(models.Max("position"))[
@@ -123,9 +126,6 @@ class Class(models.Model):
             self.position = (last or 0) + 1
 
         super().save(*args, **kwargs)
-
-    def __str__(self):
-        return f"{self.group} – {self.display_name}"
 
     @property
     def display_name(self):
@@ -170,7 +170,7 @@ class Class(models.Model):
             return self.State.PLANNED
 
         return self.state
-    
+
     @property
     def is_open(self):
         """Fogad-e most munkát ez az óra."""

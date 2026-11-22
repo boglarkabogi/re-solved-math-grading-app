@@ -109,6 +109,7 @@ def read_cases(raw_bytes):
         task_text = cell.get("task_text", "")
         correct_solution = cell.get("correct_solution", "")
         code = cell.get("task_code", "")
+        task = None
 
         if code:
             task = TaskBank.objects.filter(code=code).select_related("topic").first()
@@ -130,6 +131,8 @@ def read_cases(raw_bytes):
         cases.append(
             {
                 "label": cell.get("label") or code or f"sor-{line_number}",
+                "task_code": code,
+                "topic": task.topic if task is not None else None,
                 "task_text": task_text,
                 "correct_solution": correct_solution,
                 "solution_text": cell["solution_text"],

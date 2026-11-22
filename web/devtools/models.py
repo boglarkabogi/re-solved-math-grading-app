@@ -26,7 +26,7 @@ class TrialRun(models.Model):
 
     def __str__(self):
         return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} – {self.score}"
-    
+
     @property
     def matches_expected(self):
         if self.score is None or self.expected_score is None:
@@ -39,6 +39,15 @@ class BenchmarkCase(models.Model):
     """One item of the regression set: the score this solution should get."""
 
     label = models.CharField("címke", max_length=120, blank=True)
+    task_code = models.CharField("feladat kódja", max_length=64, blank=True)
+    topic = models.ForeignKey(
+        "bank.Topic",
+        verbose_name="témakör",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="benchmark_cases",
+    )
     task_text = models.TextField("feladat")
     correct_solution = models.TextField("helyes megoldás")
     solution_text = models.TextField("a diák megoldása")
@@ -60,6 +69,7 @@ class BenchmarkRun(models.Model):
 
     model_name = models.CharField("modell", max_length=120)
     prompt_version = models.CharField("prompt verziója", max_length=40, blank=True)
+    system_prompt = models.TextField("a futtatáshoz használt prompt", blank=True)
     case_count = models.PositiveIntegerField("esetek száma", default=0)
     match_count = models.PositiveIntegerField("egyezések száma", default=0)
     mean_deviation = models.FloatField("átlagos eltérés", null=True, blank=True)
@@ -73,16 +83,35 @@ class BenchmarkRun(models.Model):
     def __str__(self):
         return f"{self.created_at:%Y.%m.%d. %H:%M} – {self.model_name} ({self.match_count}/{self.case_count})"
 
+    @property
+    def topic_summary(self):
+        """A futásban szereplő témakör, vagy 'vegyes', ha több is van."""
+        labels = sorted(
+            {label for label in self.results.values_list("topic_label", flat=True) if label}
+        )
+
+        if not labels:
+            return "–"
+
+        if len(labels) == 1:
+            return labels[0]
+
+        return f"vegyes ({len(labels)})"
+
 
 class BenchmarkResult(models.Model):
-    """What one model said about one case in one run.
-
-    The aggregates on BenchmarkRun answer "did it get better"; these rows
-    answer "where did it get better", which is the part worth writing about.
-    """
+    """What one model said about one case in one run."""
 
     run = models.ForeignKey(BenchmarkRun, on_delete=models.CASCADE, related_name="results")
-    case = models.ForeignKey(BenchmarkCase, on_delete=models.CASCADE, related_name="results")
+    case_label = models.CharField("teszteset neve", max_length=120, blank=True)
+    topic_label = models.CharField("témakör", max_length=120, blank=True)
+    case = models.ForeignKey(
+        BenchmarkCase,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="results",
+    )
     expected_score = models.DecimalField("elvárt pont", max_digits=3, decimal_places=2)
     score = models.DecimalField("kapott pont", max_digits=3, decimal_places=2, null=True, blank=True)
     reasoning = models.TextField("indoklás", blank=True)
@@ -95,13 +124,13 @@ class BenchmarkResult(models.Model):
     class Meta:
         verbose_name = "teszteset eredménye"
         verbose_name_plural = "tesztesetek eredményei"
-        ordering = ["case_id"]
+        ordering = ["pk"]
         constraints = [
             models.UniqueConstraint(fields=["run", "case"], name="one_result_per_case_per_run"),
         ]
 
     def __str__(self):
-        return f"{self.case} – kapott: {self.score}"
+        return f"{self.case_label or self.case} – kapott: {self.score}"
 
     @property
     def deviation(self):
