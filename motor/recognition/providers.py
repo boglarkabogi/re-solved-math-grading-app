@@ -22,11 +22,16 @@ OCR_MODELS = {
         "url": "https://openrouter.ai/api/v1/chat/completions",
         "api_key_env": "OPENROUTER_API_KEY",
     },
+    "nemotron": {
+        "name": "nvidia/nemotron-3.5-super-vl-120b-a12b",
+        "url": "https://integrate.api.nvidia.com/v1/chat/completions",
+        "api_key_env": "LLM_API_KEY",
+    }
 }
 
 
 def get_ocr_model():
-    model_key = os.getenv("OCR_MODEL", "llama")
+    model_key = os.getenv("OCR_MODEL", "nemotron")
 
     if model_key not in OCR_MODELS:
         raise RuntimeError(f"Unknown OCR model: {model_key}")
